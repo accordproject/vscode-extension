@@ -1,0 +1,1820 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Ergo",
+	"scopeName": "source.ergo",
+	"fileTypes": [
+		".ergo"
+	],
+	"patterns": [
+		{
+			"include": "#ergo-declaration"
+		},
+		{
+			"include": "#comment"
+		}
+	],
+	"repository": {
+		"statements": {
+			"patterns": [
+				{
+					"include": "#string"
+				},
+				{
+					"include": "#template"
+				},
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#literal"
+				},
+				{
+					"include": "#match-statement"
+				},
+				{
+					"include": "#local-var"
+				},
+				{
+					"include": "#enforce-statement"
+				},
+				{
+					"include": "#control-statement"
+				},
+				{
+					"include": "#expression"
+				},
+				{
+					"include": "#punctuation-semicolon"
+				}
+			]
+		},
+		"ergo-contract-declaration": {
+			"name": "meta.var.expr.ergo",
+			"begin": "(?<!\\.|\\$)\\b(contract\\b)(?:(?:\\s+|(?<=\\*))([_$[:alpha:]][_$[:alnum:]]*))\\s+(over\\b)(?:(?:\\s+|(?<=\\*))([_$[:alpha:]][_$[:alnum:]]*))(\\s+(state\\b)(?:(?:\\s+|(?<=\\*))([_$[:alpha:]][_$[:alnum:]]*)))?\\s*\\{",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.contract.ergo"
+				},
+				"2": {
+					"name": "entity.name.contract.ergo"
+				},
+				"3": {
+					"name": "keyword.control.over.ergo"
+				},
+				"4": {
+					"name": "entity.name.type.module.ergo"
+				},
+				"6": {
+					"name": "keyword.control.state.ergo"
+				},
+				"7": {
+					"name": "entity.name.type.module.ergo"
+				}
+			},
+			"end": "(?=;|\\})|(?<=\\})",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#ergo-clause-declaration"
+				}
+			]
+		},
+		"ergo-clause-declaration": {
+			"name": "meta.clause.ergo",
+			"begin": "(?<!\\.|\\$)\\b(clause\\b)(?:(?:\\s+|(?<=\\*))([_$[:alpha:]][_$[:alnum:]]*))\\s*",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.clause.ergo"
+				},
+				"2": {
+					"name": "entity.name.function.ergo"
+				}
+			},
+			"end": "(?=;|\\})|(?<=\\})",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#type-parameters"
+				},
+				{
+					"include": "#function-parameters"
+				},
+				{
+					"include": "#return-type"
+				},
+				{
+					"include": "#emit-type"
+				},
+				{
+					"include": "#decl-block"
+				}
+			]
+		},
+		"local-var": {
+			"name": "meta.var.expr.ergo",
+			"begin": "(?<!\\.|\\$)((\\blet)\\s+)(?!\\$)",
+			"beginCaptures": {
+				"2": {
+					"name": "keyword.control.let.ergo"
+				}
+			},
+			"end": "(?=$|;|}|(\\s+(of|in)\\s+))",
+			"patterns": [
+				{
+					"include": "#var-single-variable"
+				},
+				{
+					"include": "#variable-initializer"
+				},
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"enforce-statement": {
+			"name": "meta.enforce.ergo",
+			"begin": "(?<!\\.|\\$)((\\benforce)\\s*)(?!\\$)",
+			"beginCaptures": {
+				"2": {
+					"name": "keyword.control.enforce.ergo"
+				}
+			},
+			"end": "(?=$|;|}|(\\s+(of|in)\\s+))",
+			"patterns": [
+				{
+					"include": "#expression"
+				},
+				{
+					"include": "#comment"
+				}
+			]
+		},
+		"var-single-variable": {
+			"name": "meta.var-single-variable.expr.ergo",
+			"begin": "([_$[:alpha:]][_$[:alnum:]]*)",
+			"beginCaptures": {
+				"1": {
+					"name": "variable.other.readwrite.ergo"
+				}
+			},
+			"end": "(?=$|[;,=}]|(\\s+(of|in)\\s+))",
+			"patterns": [
+				{
+					"include": "#type-annotation"
+				},
+				{
+					"include": "#string"
+				},
+				{
+					"include": "#comment"
+				}
+			]
+		},
+		"object-binding-element": {
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"begin": "([_$[:alpha:]][_$[:alnum:]]*)\\s*(:)",
+					"beginCaptures": {
+						"1": {
+							"name": "variable.object.property.ergo"
+						},
+						"2": {
+							"name": "punctuation.destructuring.ergo"
+						}
+					},
+					"end": "(?=,|\\})",
+					"patterns": [
+						{
+							"include": "#object-binding-pattern"
+						},
+						{
+							"include": "#array-binding-pattern"
+						},
+						{
+							"name": "variable.other.readwrite.ergo",
+							"match": "([_$[:alpha:]][_$[:alnum:]]*)"
+						},
+						{
+							"include": "#variable-initializer"
+						}
+					]
+				},
+				{
+					"include": "#object-binding-pattern"
+				},
+				{
+					"include": "#destructuring-variable-rest"
+				},
+				{
+					"include": "#variable-initializer"
+				},
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"array-binding-element": {
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#object-binding-pattern"
+				},
+				{
+					"include": "#array-binding-pattern"
+				},
+				{
+					"include": "#variable-initializer"
+				},
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"destructuring-variable-rest": {
+			"match": "(?:(\\.\\.\\.)\\s*)?([_$[:alpha:]][_$[:alnum:]]*)",
+			"captures": {
+				"1": {
+					"name": "keyword.operator.rest.ergo"
+				},
+				"2": {
+					"name": "variable.other.readwrite.ergo"
+				}
+			}
+		},
+		"object-binding-pattern": {
+			"begin": "(?:(\\.\\.\\.)\\s*)?(\\{)",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.operator.rest.ergo"
+				},
+				"2": {
+					"name": "punctuation.definition.binding-pattern.object.ergo"
+				}
+			},
+			"end": "\\}",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.binding-pattern.object.ergo"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#object-binding-element"
+				}
+			]
+		},
+		"array-binding-pattern": {
+			"begin": "(?:(\\.\\.\\.)\\s*)?(\\[)",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.operator.rest.ergo"
+				},
+				"2": {
+					"name": "punctuation.definition.binding-pattern.array.ergo"
+				}
+			},
+			"end": "\\]",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.binding-pattern.array.ergo"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#array-binding-element"
+				}
+			]
+		},
+		"expression": {
+			"name": "meta.expression.ergo",
+			"patterns": [
+				{
+					"include": "#string"
+				},
+				{
+					"include": "#template"
+				},
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#literal"
+				},
+				{
+					"include": "#decl-block"
+				},
+				{
+					"include": "#for-loop"
+				},
+				{
+					"include": "#where-clause"
+				},
+				{
+					"include": "#expression-operators"
+				},
+				{
+					"include": "#function-call"
+				},
+				{
+					"include": "#identifiers"
+				},
+				{
+					"include": "#paren-expression"
+				},
+				{
+					"include": "#punctuation-comma"
+				},
+				{
+					"include": "#punctuation-accessor"
+				}	
+			]
+		},
+		"control-statement": {
+			"patterns": [
+				{
+					"name": "keyword.control.flow.ergo",
+					"match": "(?<!\\.|\\$)\\b(return|(set\\s+state)|throw|emit)\\b(?!\\$)"
+				},
+				{
+					"name": "keyword.control.match.ergo",
+					"match": "(?<!\\.|\\$)\\b(with|else|match)\\b(?!\\$)"
+				},
+				{
+					"name": "keyword.control.conditional.ergo",
+					"match": "(?<!\\.|\\$)\\b(else|if|then)\\b(?!\\$)"
+				}
+			]
+		},
+		"ergo-declaration": {
+			"name": "meta.declaration.ergo",
+			"patterns": [
+				{
+					"include": "#ergo-contract-declaration"
+				},
+				{
+					"include": "#ergo-clause-declaration"
+				},
+				{
+					"include": "#function-declaration"
+				},
+				{
+					"include": "#constant-declaration"
+				},
+				{
+					"include": "#type-declaration"
+				},
+				{
+					"include": "#enum-declaration"
+				},
+				{
+					"include": "#namespace-declaration"
+				},
+				{
+					"include": "#import-declaration"
+				}
+			]
+		},
+		"type-declaration": {
+			"name": "meta.type.declaration.ergo",
+			"begin": "(?<!\\.|\\$)(?:(\\bexport)\\s+)?\\b(type)\\b\\s+([_$[:alpha:]][_$[:alnum:]]*)\\s*",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.export.ergo"
+				},
+				"2": {
+					"name": "storage.type.type.ergo"
+				},
+				"3": {
+					"name": "entity.name.type.ergo"
+				}
+			},
+			"end": "(?=[};]|\\bvariable\\b|\\blet\\b|\\bconst\\b|\\bfunction\\b|\\bclass\\b|\\bnamespace\\b|\\bimport\\b|\\benum\\b)",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#type-parameters"
+				},
+				{
+					"include": "#type"
+				},
+				{
+					"match": "(=)\\s*",
+					"captures": {
+						"1": {
+							"name": "keyword.operator.assignment.ergo"
+						}
+					}
+				}
+			]
+		},
+		"enum-declaration": {
+			"name": "meta.enum.declaration.ergo",
+			"begin": "(?<!\\.|\\$)(?:(\\bdefine)\\s+)\\b(enum)\\s+([_$[:alpha:]][_$[:alnum:]]*)",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.define.ergo"
+				},
+				"2": {
+					"name": "storage.type.enum.ergo"
+				},
+				"3": {
+					"name": "entity.name.type.enum.ergo"
+				}
+			},
+			"end": "(?<=\\})",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"begin": "\\{",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.block.ergo"
+						}
+					},
+					"end": "\\}",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.block.ergo"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#comment"
+						},
+						{
+							"begin": "([_$[:alpha:]][_$[:alnum:]]*)",
+							"beginCaptures": {
+								"0": {
+									"name": "variable.other.enummember.ergo"
+								}
+							},
+							"end": "(?=,|\\}|$)",
+							"patterns": [
+								{
+									"include": "#comment"
+								},
+								{
+									"include": "#variable-initializer"
+								}
+							]
+						},
+						{
+							"begin": "(?=(?:(?:\\'[^']*\\')|(?:\\\"[^\"]*\\\")))",
+							"end": "(?=,|\\}|$)",
+							"patterns": [
+								{
+									"include": "#string"
+								},
+								{
+									"include": "#comment"
+								},
+								{
+									"include": "#variable-initializer"
+								}
+							]
+						},
+						{
+							"include": "#punctuation-comma"
+						}
+					]
+				}
+			]
+		},
+		"namespace-declaration": {
+			"name": "meta.namespace.declaration.ergo",
+			"begin": "(?<!\\.|\\$)(?:(\\bexport)\\s+)?\\b(namespace|module)\\s+",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.export.ergo"
+				},
+				"2": {
+					"name": "storage.type.namespace.ergo"
+				}
+			},
+			"end": "(?=$|\\{)",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#string"
+				},
+				{
+					"name": "entity.name.type.module.ergo",
+					"match": "([_$[:alpha:]][_$[:alnum:]]*)"
+				},
+				{
+					"name": "punctuation.accessor.ergo",
+					"match": "\\."
+				}
+			]
+		},
+		"import-declaration": {
+			"name": "meta.import.ergo",
+			"begin": "(?<!\\.|\\$)(?:(\\bexport)\\s+)?\\b(import)(?!(\\s*:)|(\\$))\\b",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.export.ergo"
+				},
+				"2": {
+					"name": "keyword.control.import.ergo"
+				}
+			},
+			"end": "(?=;|$)"
+		},
+		"function-declaration": {
+			"name": "meta.function.ergo",
+			"begin": "(?<!\\.|\\$)((\\bdefine)\\s+)\\b(function\\b)(?:(?:\\s+|(?<=\\*))([_$[:alpha:]][_$[:alnum:]]*))\\s*",
+			"beginCaptures": {
+				"2": {
+					"name": "keyword.control.define.ergo"
+				},
+				"3": {
+					"name": "keyword.control.function.ergo"
+				},
+				"4": {
+					"name": "entity.name.function.ergo"
+				}
+			},
+			"end": "(?=;|\\})|(?<=\\})",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#type-parameters"
+				},
+				{
+					"include": "#function-parameters"
+				},
+				{
+					"include": "#return-type"
+				},
+				{
+					"include": "#decl-block"
+				}
+			]
+		},
+		"constant-declaration": {
+			"name": "meta.constant.ergo",
+			"begin": "(?<!\\.|\\$)((\\bdefine)\\s+)\\b(constant\\b)(?!\\$)",
+			"beginCaptures": {
+				"2": {
+					"name": "keyword.control.define.ergo"
+				},
+				"3": {
+					"name": "keyword.control.constant.ergo"
+				}
+			},
+			"end": "(?=$|;|}|(\\s+(of|in)\\s+))",
+			"patterns": [
+				{
+					"include": "#var-single-variable"
+				},
+				{
+					"include": "#variable-initializer"
+				},
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"object-literal": {
+			"name": "meta.objectliteral.ergo",
+			"begin": "(?:(\\.)\\s*)?([_$[:alpha:]][_$[:alnum:]]*)\\s*(?=(<([^<>]|\\<[^<>]+\\>)+>\\s*)?\\{",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.accessor.ergo"
+				},
+				"2": {
+					"name": "entity.name.function.ergo"
+				}
+			},
+			"end": "(?<=\\})",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.block.ergo"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#object-member"
+				}
+			]
+		},
+		"decl-block": {
+			"name": "meta.block.ergo",
+			"begin": "\\{",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.block.ergo"
+				}
+			},
+			"end": "\\}",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.block.ergo"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#statements"
+				}
+			]
+		},
+		"parameter-name": {
+			"match": "(?:\\s*\\b(readonly)\\s+)?(?:\\s*\\b(public|private|protected)\\s+)?(\\.\\.\\.)?\\s*(?<!=|:)([_$[:alpha:]][_$[:alnum:]]*)\\s*(\\??)",
+			"captures": {
+				"1": {
+					"name": "storage.modifier.ergo"
+				},
+				"2": {
+					"name": "storage.modifier.ergo"
+				},
+				"3": {
+					"name": "keyword.operator.rest.ergo"
+				},
+				"4": {
+					"name": "variable.parameter.ergo"
+				},
+				"5": {
+					"name": "keyword.operator.optional.ergo"
+				}
+			}
+		},
+		"destructuring-parameter": {
+			"patterns": [
+				{
+					"name": "meta.parameter.object-binding-pattern.ergo",
+					"begin": "(?<!=|:)\\s*(\\{)",
+					"beginCaptures": {
+						"1": {
+							"name": "punctuation.definition.binding-pattern.object.ergo"
+						}
+					},
+					"end": "\\}",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.binding-pattern.object.ergo"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#parameter-object-binding-element"
+						}
+					]
+				},
+				{
+					"name": "meta.paramter.array-binding-pattern.ergo",
+					"begin": "(?<!=|:)\\s*(\\[)",
+					"beginCaptures": {
+						"1": {
+							"name": "punctuation.definition.binding-pattern.array.ergo"
+						}
+					},
+					"end": "\\]",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.binding-pattern.array.ergo"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#parameter-array-binding-element"
+						}
+					]
+				}
+			]
+		},
+		"parameter-object-binding-element": {
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"begin": "([_$[:alpha:]][_$[:alnum:]]*)\\s*(:)",
+					"beginCaptures": {
+						"1": {
+							"name": "variable.object.property.ergo"
+						},
+						"2": {
+							"name": "punctuation.destructuring.ergo"
+						}
+					},
+					"end": "(?=,|\\})",
+					"patterns": [
+						{
+							"include": "#parameter-object-binding-pattern"
+						},
+						{
+							"include": "#parameter-array-binding-pattern"
+						},
+						{
+							"name": "variable.parameter.ergo",
+							"match": "([_$[:alpha:]][_$[:alnum:]]*)"
+						},
+						{
+							"include": "#variable-initializer"
+						}
+					]
+				},
+				{
+					"include": "#parameter-object-binding-pattern"
+				},
+				{
+					"include": "#destructuring-parameter-rest"
+				},
+				{
+					"include": "#variable-initializer"
+				},
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"parameter-array-binding-element": {
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#parameter-object-binding-pattern"
+				},
+				{
+					"include": "#parameter-array-binding-pattern"
+				},
+				{
+					"include": "#destructuring-parameter-rest"
+				},
+				{
+					"include": "#variable-initializer"
+				},
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"destructuring-parameter-rest": {
+			"match": "(?:(\\.\\.\\.)\\s*)?([_$[:alpha:]][_$[:alnum:]]*)",
+			"captures": {
+				"1": {
+					"name": "keyword.operator.rest.ergo"
+				},
+				"2": {
+					"name": "variable.parameter.ergo"
+				}
+			}
+		},
+		"parameter-object-binding-pattern": {
+			"begin": "(?:(\\.\\.\\.)\\s*)?(\\{)",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.operator.rest.ergo"
+				},
+				"2": {
+					"name": "punctuation.definition.binding-pattern.object.ergo"
+				}
+			},
+			"end": "\\}",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.binding-pattern.object.ergo"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#parameter-object-binding-element"
+				}
+			]
+		},
+		"parameter-array-binding-pattern": {
+			"begin": "(?:(\\.\\.\\.)\\s*)?(\\[)",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.operator.rest.ergo"
+				},
+				"2": {
+					"name": "punctuation.definition.binding-pattern.array.ergo"
+				}
+			},
+			"end": "\\]",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.binding-pattern.array.ergo"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#parameter-array-binding-element"
+				}
+			]
+		},
+		"throws-declaration": {
+			"name": "meta.clause.throws.ergo",
+			"begin": "\\b(throws)\\b",
+			"beginCaptures": {
+				"0": {
+					"name": "keyword.control.throws.ergo"
+				}
+			},
+			"end": "(?<!:)((?=$)|(?=\\{|;|//|\\}))",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#type"
+				}
+			]
+		},
+		"return-type": {
+			"name": "meta.return.type.ergo",
+			"begin": "(?<=\\))\\s*(:)",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.operator.type.annotation.ergo"
+				}
+			},
+			"end": "(?<!:)((?=$)|(?=\\{|;|//|\\}|\\bemits\\b))",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#throws-declaration"
+				},
+				{
+					"include": "#type"
+				}
+			]
+		},
+		"emit-type": {
+			"name": "meta.return.emittype.ergo",
+			"begin": "\\s*(emits\\b)",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.emits.ergo"
+				}
+			},
+			"end": "(?<!:)((?=$)|(?=\\{|;|//|\\}))",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#throws-declaration"
+				},
+				{
+					"include": "#type"
+				}
+			]
+		},
+		"type-annotation": {
+			"name": "meta.type.annotation.ergo",
+			"begin": ":",
+			"beginCaptures": {
+				"0": {
+					"name": "keyword.operator.type.annotation.ergo"
+				}
+			},
+			"end": "(?=$|[,);\\}\\]]|//)|(?==[^>])|(?<=[\\}>\\]\\)]|[_$[:alpha:]])\\s*(?=\\{)",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#type"
+				}
+			]
+		},
+		"type": {
+			"name": "meta.type.ergo",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#string"
+				},
+				{
+					"include": "#numeric-literal"
+				},
+				{
+					"include": "#type-primitive"
+				},
+				{
+					"include": "#type-builtin-literals"
+				},
+				{
+					"include": "#type-parameters"
+				},
+				{
+					"include": "#type-operators"
+				},
+				{
+					"include": "#type-paren-or-function-parameters"
+				},
+				{
+					"include": "#type-function-return-type"
+				},
+				{
+					"include": "#type-name"
+				}
+			]
+		},
+		"function-parameters": {
+			"name": "meta.parameters.ergo",
+			"begin": "\\(",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.parameters.begin.ergo"
+				}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.parameters.end.ergo"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#destructuring-parameter"
+				},
+				{
+					"include": "#parameter-name"
+				},
+				{
+					"include": "#type-annotation"
+				},
+				{
+					"include": "#variable-initializer"
+				},
+				{
+					"name": "punctuation.separator.parameter.ergo",
+					"match": ","
+				}
+			]
+		},
+		"type-primitive": {
+			"name": "support.type.primitive.ergo",
+			"match": "(?<!\\.|\\$)\\b(String|Double|Long|Integer|Boolean|DateTime|Duration|Unit)\\b(?!\\$)"
+		},
+		"type-builtin-literals": {
+			"name": "support.type.builtin.ergo",
+			"match": "(?<!\\.|\\$)\\b(true|false|contract|state|now)\\b(?!\\$)"
+		},
+		"type-paren-or-function-parameters": {
+			"name": "meta.type.paren.cover.ergo",
+			"begin": "\\s*(\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "meta.brace.round.ergo"
+				}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {
+					"name": "meta.brace.round.ergo"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#type"
+				},
+				{
+					"include": "#function-parameters"
+				}
+			]
+		},
+		"type-function-return-type": {
+			"name": "meta.type.function.return.ergo",
+			"begin": "=>",
+			"beginCaptures": {
+				"0": {
+					"name": "storage.type.function.arrow.ergo"
+				}
+			},
+			"end": "(?<!=>)(?=[,\\]\\)\\{\\}=;>]|//|$)",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"name": "meta.object.type.ergo",
+					"begin": "(?<==>)\\s*(\\{)",
+					"beginCaptures": {
+						"1": {
+							"name": "punctuation.definition.block.ergo"
+						}
+					},
+					"end": "\\}",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.block.ergo"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#type-object-members"
+						}
+					]
+				},
+				{
+					"include": "#type"
+				}
+			]
+		},
+		"type-function-return-type": {
+			"name": "meta.type.function.return.ergo",
+			"begin": "=>",
+			"beginCaptures": {
+				"0": {
+					"name": "storage.type.function.arrow.ergo"
+				}
+			},
+			"end": "(?<!=>)(?=[,\\]\\)\\{\\}=;>]|//|$)",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"name": "meta.object.type.ergo",
+					"begin": "(?<==>)\\s*(\\{)",
+					"beginCaptures": {
+						"1": {
+							"name": "punctuation.definition.block.ergo"
+						}
+					},
+					"end": "\\}",
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.definition.block.ergo"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#type-object-members"
+						}
+					]
+				},
+				{
+					"include": "#type"
+				}
+			]
+		},
+		"type-name": {
+			"patterns": [
+				{
+					"match": "([_$[:alpha:]][_$[:alnum:]]*)\\s*(\\.)",
+					"captures": {
+						"1": {
+							"name": "entity.name.type.module.ergo"
+						},
+						"2": {
+							"name": "punctuation.accessor.ergo"
+						}
+					}
+				},
+				{
+					"name": "entity.name.type.ergo",
+					"match": "[_$[:alpha:]][_$[:alnum:]]*"
+				}
+			]
+		},
+		"type-parameters": {
+			"name": "meta.type.parameters.ergo",
+			"begin": "DO_NOT_MATCH",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.definition.typeparameters.begin.ergo"
+				}
+			},
+			"end": "(?=$)|(>)",
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.definition.typeparameters.end.ergo"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"name": "storage.modifier.ergo",
+					"match": "(?<!\\.|\\$)\\b(extends)\\b(?!\\$)"
+				},
+				{
+					"include": "#type"
+				},
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"variable-initializer": {
+			"begin": "(?<!=|!)(=)(?!=)",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.operator.assignment.ergo"
+				}
+			},
+			"end": "(?=$|[,);}\\]])",
+			"patterns": [
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"for-loop": {
+			"begin": "(?<!\\.|\\$)\\b(foreach)\\s*",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.foreach.ergo"
+				}
+			},
+			"end": "\\b(in)\\b",
+			"endCaptures": {
+				"0": {
+					"name": "keyword.control.in.ergo"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"where-clause": {
+			"begin": "(?<!\\.|\\$)\\b(where)\\s*",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.foreach.ergo"
+				}
+			},
+			"end": "\\b(return)\\b",
+			"endCaptures": {
+				"0": {
+					"name": "keyword.control.return.ergo"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"match-expression": {
+			"name": "match-expression.expr.ergo",
+			"begin": "(?<!\\.|\\$)\\b(match)\\s*(\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.match.ergo"
+				},
+				"2": {
+					"name": "meta.brace.round.ergo"
+				}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {
+					"name": "meta.brace.round.ergo"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"match-block": {
+			"name": "match-block.expr.ergo",
+			"begin": "{",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.block.ergo"
+				}
+			},
+			"end": "(?=\\})",
+			"patterns": [
+				{
+					"include": "#case-clause"
+				},
+				{
+					"include": "#statements"
+				}
+			]
+		},
+		"case-clause": {
+			"name": "case-clause.expr.ergo",
+			"begin": "(?<!\\.|\\$)\\b(case|default(?=:))\\b(?!\\$)",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.match.ergo"
+				}
+			},
+			"end": ":",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.section.case-statement.ergo"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"match-statement": {
+			"name": "match-statement.expr.ergo",
+			"begin": "(?<!\\.|\\$)(?=\\bmatch\\s*\\()",
+			"end": "}",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.block.ergo"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#match-expression"
+				},
+				{
+					"include": "#match-block"
+				}
+			]
+		},
+		"function-call": {
+			"begin": "(?:(\\.)\\s*)?([_$[:alpha:]][_$[:alnum:]]*)\\s*(?=(<([^<>]|\\<[^<>]+\\>)+>\\s*)?\\()",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.accessor.ergo"
+				},
+				"2": {
+					"name": "entity.name.function.ergo"
+				}
+			},
+			"end": "(?<=\\))",
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"include": "#paren-expression"
+				}
+			]
+		},
+		"identifiers": {
+			"patterns": [
+				{
+					"name": "support.class.ergo",
+					"match": "([_$[:alpha:]][_$[:alnum:]]*)(?=\\s*\\.\\s*prototype\\b(?!\\$))"
+				},
+				{
+					"match": "(?x)(\\.)\\s*(?:\n  ([[:upper:]][_$[:digit:][:upper:]]*) |\n  ([_$[:alpha:]][_$[:alnum:]]*)\n)(?=\\s*\\.\\s*[_$[:alpha:]][_$[:alnum:]]*)",
+					"captures": {
+						"1": {
+							"name": "punctuation.accessor.ergo"
+						},
+						"2": {
+							"name": "constant.other.object.property.ergo"
+						},
+						"3": {
+							"name": "variable.other.object.property.ergo"
+						}
+					}
+				},
+				{
+					"match": "(?x)(?:(\\.)\\s*)?([_$[:alpha:]][_$[:alnum:]]*)(?=\\s*=\\s*( (async\\s+)|(function\\s*[(<])|(function\\s+)| ([_$[:alpha:]][_$[:alnum:]]*\\s*=>)| ((<([^<>]|\\<[^<>]+\\>)+>\\s*)?\\(([^()]|\\([^()]*\\))*\\)(\\s*:\\s*(.)*)?\\s*=>)))",
+					"captures": {
+						"1": {
+							"name": "punctuation.accessor.ergo"
+						},
+						"2": {
+							"name": "entity.name.function.ergo"
+						}
+					}
+				},
+				{
+					"match": "(\\.)\\s*([[:upper:]][_$[:digit:][:upper:]]*)(?![_$[:alnum:]])",
+					"captures": {
+						"1": {
+							"name": "punctuation.accessor.ergo"
+						},
+						"2": {
+							"name": "constant.other.property.ergo"
+						}
+					}
+				},
+				{
+					"match": "(\\.)\\s*([_$[:alpha:]][_$[:alnum:]]*)",
+					"captures": {
+						"1": {
+							"name": "punctuation.accessor.ergo"
+						},
+						"2": {
+							"name": "variable.other.property.ergo"
+						}
+					}
+				},
+				{
+					"match": "(?x)(?:\n  ([[:upper:]][_$[:digit:][:upper:]]*) |\n  ([_$[:alpha:]][_$[:alnum:]]*)\n)(?=\\s*\\.\\s*[_$[:alpha:]][_$[:alnum:]]*)",
+					"captures": {
+						"1": {
+							"name": "constant.other.object.ergo"
+						},
+						"2": {
+							"name": "variable.other.object.ergo"
+						}
+					}
+				},
+				{
+					"name": "constant.other.ergo",
+					"match": "([[:upper:]][_$[:digit:][:upper:]]*)(?![_$[:alnum:]])"
+				},
+				{
+					"name": "variable.other.readwrite.ergo",
+					"match": "[_$[:alpha:]][_$[:alnum:]]*"
+				}
+			]
+		},
+		"object-member": {
+			"patterns": [
+				{
+					"include": "#comment"
+				},
+				{
+					"name": "meta.object.member.ergo",
+					"begin": "(?:[_$[:alpha:]][_$[:alnum:]]*)\\s*(:)",
+					"beginCaptures": {
+						"0": {
+							"name": "meta.object-literal.key.ergo"
+						},
+						"1": {
+							"name": "punctuation.separator.key-value.ergo"
+						}
+					},
+					"end": "(?=,|\\})",
+					"patterns": [
+						{
+							"include": "#expression"
+						}
+					]
+				}
+			]
+		},
+		"expression-operators": {
+			"patterns": [
+				{
+					"name": "keyword.control.flow.ergo",
+					"match": "(?<!\\.|\\$)\\b(await)\\b(?!\\$)"
+				},
+				{
+					"name": "keyword.operator.expression.delete.ergo",
+					"match": "(?<!\\.|\\$)\\bdelete\\b(?!\\$)"
+				},
+				{
+					"name": "keyword.operator.expression.in.ergo",
+					"match": "(?<!\\.|\\$)\\bin\\b(?!\\$)"
+				},
+				{
+					"name": "keyword.operator.expression.of.ergo",
+					"match": "(?<!\\.|\\$)\\bof\\b(?!\\$)"
+				},
+				{
+					"name": "keyword.operator.expression.instanceof.ergo",
+					"match": "(?<!\\.|\\$)\\binstanceof\\b(?!\\$)"
+				},
+				{
+					"name": "keyword.operator.new.ergo",
+					"match": "(?<!\\.|\\$)\\bnew\\b(?!\\$)"
+				},
+				{
+					"include": "#typeof-operator"
+				},
+				{
+					"name": "keyword.operator.expression.void.ergo",
+					"match": "(?<!\\.|\\$)\\bvoid\\b(?!\\$)"
+				},
+				{
+					"begin": "(?<!\\.|\\$)\\bas\\b(?!\\$)",
+					"beginCaptures": {
+						"0": {
+							"name": "keyword.control.as.ergo"
+						}
+					},
+					"end": "(?=$|[;,:})\\]])",
+					"patterns": [
+						{
+							"include": "#type"
+						}
+					]
+				},
+				{
+					"name": "keyword.operator.spread.ergo",
+					"match": "\\.\\.\\."
+				},
+				{
+					"name": "keyword.operator.assignment.compound.ergo",
+					"match": "\\*=|(?<!\\()/=|%=|\\+=|\\-="
+				},
+				{
+					"name": "keyword.operator.assignment.compound.bitwise.ergo",
+					"match": "\\&=|\\^=|<<=|>>=|>>>=|\\|="
+				},
+				{
+					"name": "keyword.operator.bitwise.shift.ergo",
+					"match": "<<|>>>|>>"
+				},
+				{
+					"name": "keyword.operator.comparison.ergo",
+					"match": "===|!==|==|!="
+				},
+				{
+					"name": "keyword.operator.relational.ergo",
+					"match": "<=|>=|<>|<|>"
+				},
+				{
+					"name": "keyword.operator.logical.ergo",
+					"match": "\\!|&&|\\|\\|"
+				},
+				{
+					"name": "keyword.operator.bitwise.ergo",
+					"match": "\\&|~|\\^|\\|"
+				},
+				{
+					"name": "keyword.operator.assignment.ergo",
+					"match": "\\="
+				},
+				{
+					"name": "keyword.operator.decrement.ergo",
+					"match": "--"
+				},
+				{
+					"name": "keyword.operator.increment.ergo",
+					"match": "\\+\\+"
+				},
+				{
+					"name": "keyword.operator.arithmetic.ergo",
+					"match": "%|\\*|/|-|\\+"
+				}
+			]
+		},
+		"punctuation-comma": {
+			"name": "punctuation.separator.comma.ergo",
+			"match": ","
+		},
+		"punctuation-semicolon": {
+			"name": "punctuation.terminator.statement.ergo",
+			"match": ";"
+		},
+		"punctuation-accessor": {
+			"name": "punctuation.accessor.ergo",
+			"match": "\\."
+		},
+		"paren-expression": {
+			"begin": "\\(",
+			"beginCaptures": {
+				"0": {
+					"name": "meta.brace.round.ergo"
+				}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {
+					"name": "meta.brace.round.ergo"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#expression"
+				},
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"qstring-double": {
+			"name": "string.quoted.double.ergo",
+			"begin": "\"",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.begin.ergo"
+				}
+			},
+			"end": "(\")|((?:[^\\\\\\n])$)",
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.definition.string.end.ergo"
+				},
+				"2": {
+					"name": "invalid.illegal.newline.ergo"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#string-character-escape"
+				}
+			]
+		},
+		"qstring-single": {
+			"name": "string.quoted.single.ergo",
+			"begin": "'",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.begin.ergo"
+				}
+			},
+			"end": "(\\')|((?:[^\\\\\\n])$)",
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.definition.string.end.ergo"
+				},
+				"2": {
+					"name": "invalid.illegal.newline.ergo"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#string-character-escape"
+				}
+			]
+		},
+		"string": {
+			"name": "string.ergo",
+			"patterns": [
+				{
+					"include": "#qstring-single"
+				},
+				{
+					"include": "#qstring-double"
+				}
+			]
+		},
+		"template": {
+			"name": "string.template.ergo",
+			"begin": "([_$[:alpha:]][_$[:alnum:]]*)?(`)",
+			"beginCaptures": {
+				"1": {
+					"name": "entity.name.function.tagged-template.ergo"
+				},
+				"2": {
+					"name": "punctuation.definition.string.template.begin.ergo"
+				}
+			},
+			"end": "`",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.template.end.ergo"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#template-substitution-element"
+				},
+				{
+					"include": "#string-character-escape"
+				}
+			]
+		},
+		"string-character-escape": {
+			"name": "constant.character.escape.ergo",
+			"match": "\\\\(x\\h{2}|[0-2][0-7]{0,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.|$)"
+		},
+		"template-substitution-element": {
+			"name": "meta.template.expression.ergo",
+			"begin": "\\$\\{",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.template-expression.begin.ergo"
+				}
+			},
+			"end": "\\}",
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.template-expression.end.ergo"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"literal": {
+			"name": "literal.ergo",
+			"patterns": [
+				{
+					"include": "#numeric-literal"
+				},
+				{
+					"include": "#boolean-literal"
+				},
+				{
+					"include": "#none-literal"
+				},
+				{
+					"include": "#some-literal"
+				},
+				{
+					"include": "#numericConstant-literal"
+				},
+				{
+					"include": "#array-literal"
+				},
+				{
+					"include": "#contract-literal"
+				},
+				{
+					"include": "#state-literal"
+				}
+			]
+		},
+		"array-literal": {
+			"name": "meta.array.literal.ergo",
+			"begin": "\\[",
+			"beginCaptures": {
+				"0": {
+					"name": "meta.brace.square.ergo"
+				}
+			},
+			"end": "\\]",
+			"endCaptures": {
+				"0": {
+					"name": "meta.brace.square.ergo"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#expression"
+				},
+				{
+					"include": "#punctuation-comma"
+				}
+			]
+		},
+		"some-literal": {
+			"name": "meta.some.literal.ergo",
+			"begin": "(\\bsome\\b)\\(",
+			"beginCaptures": {
+				"0": {
+					"name": "meta.brace.round.ergo"
+				},
+				"1": {
+					"name": "variable.language.some.ergo"
+				}
+			},
+			"end": "\\)",
+			"endCaptures": {
+				"0": {
+					"name": "meta.brace.round.ergo"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#expression"
+				}
+			]
+		},
+		"numeric-literal": {
+			"patterns": [
+				{
+					"name": "constant.numeric.hex.ergo",
+					"match": "\\b(?<!\\$)0(x|X)[0-9a-fA-F]+\\b(?!\\$)"
+				},
+				{
+					"name": "constant.numeric.binary.ergo",
+					"match": "\\b(?<!\\$)0(b|B)[01]+\\b(?!\\$)"
+				},
+				{
+					"name": "constant.numeric.octal.ergo",
+					"match": "\\b(?<!\\$)0(o|O)?[0-7]+\\b(?!\\$)"
+				},
+				{
+					"match": "(?x)\n(?<!\\$)(?:\n  (?:\\b[0-9]+(\\.)[0-9]+[eE][+-]?[0-9]+\\b)| # 1.1E+3\n  (?:\\b[0-9]+(\\.)[eE][+-]?[0-9]+\\b)|       # 1.E+3\n  (?:\\B(\\.)[0-9]+[eE][+-]?[0-9]+\\b)|       # .1E+3\n  (?:\\b[0-9]+[eE][+-]?[0-9]+\\b)|            # 1E+3\n  (?:\\b[0-9]+(\\.)[0-9]+\\b)|                # 1.1\n  (?:\\b[0-9]+(\\.)\\B)|                      # 1.\n  (?:\\B(\\.)[0-9]+\\b)|                      # .1\n  (?:\\b[0-9]+\\b(?!\\.))                     # 1\n)(?!\\$)",
+					"captures": {
+						"0": {
+							"name": "constant.numeric.decimal.ergo"
+						},
+						"1": {
+							"name": "meta.delimiter.decimal.period.ergo"
+						},
+						"2": {
+							"name": "meta.delimiter.decimal.period.ergo"
+						},
+						"3": {
+							"name": "meta.delimiter.decimal.period.ergo"
+						},
+						"4": {
+							"name": "meta.delimiter.decimal.period.ergo"
+						},
+						"5": {
+							"name": "meta.delimiter.decimal.period.ergo"
+						},
+						"6": {
+							"name": "meta.delimiter.decimal.period.ergo"
+						}
+					}
+				}
+			]
+		},
+		"boolean-literal": {
+			"patterns": [
+				{
+					"name": "constant.language.boolean.true.ergo",
+					"match": "(?<!\\.|\\$)\\btrue\\b(?!\\$)"
+				},
+				{
+					"name": "constant.language.boolean.false.ergo",
+					"match": "(?<!\\.|\\$)\\bfalse\\b(?!\\$)"
+				}
+			]
+		},
+		"none-literal": {
+			"name": "variable.language.none.ergo",
+			"match": "(?<!\\.|\\$)\\bnone\\b(?!\\$)"
+		},
+		"contract-literal": {
+			"name": "variable.language.contract.ergo",
+			"match": "(?<!\\.|\\$)\\bcontract\\b(?!\\$)"
+		},
+		"clause-literal": {
+			"name": "variable.language.clause.ergo",
+			"match": "(?<!\\.|\\$)\\bclause\\b(?!\\$)"
+		},
+		"state-literal": {
+			"name": "variable.language.state.ergo",
+			"match": "(?<!\\.|\\$)\\bstate\\b(?!\\$)"
+		},
+		"numericConstant-literal": {
+			"patterns": [
+				{
+					"name": "constant.language.nan.ergo",
+					"match": "(?<!\\.|\\$)\\bNaN\\b(?!\\$)"
+				},
+				{
+					"name": "constant.language.infinity.ergo",
+					"match": "(?<!\\.|\\$)\\bInfinity\\b(?!\\$)"
+				}
+			]
+		},
+		"comment": {
+			"patterns": [
+				{
+					"name": "comment.block.ergo",
+					"begin": "/\\*",
+					"end": "\\*/",
+					"captures": {
+						"0": {
+							"name": "punctuation.definition.comment.ergo"
+						}
+					}
+				},
+				{
+					"begin": "(^[ \\t]+)?(?=//)",
+					"beginCaptures": {
+						"1": {
+							"name": "punctuation.whitespace.comment.leading.ergo"
+						}
+					},
+					"end": "(?=$)",
+					"patterns": [
+						{
+							"name": "comment.line.double-slash.ergo",
+							"begin": "//",
+							"beginCaptures": {
+								"0": {
+									"name": "punctuation.definition.comment.ergo"
+								}
+							},
+							"end": "(?=$)"
+						}
+					]
+				}
+			]
+		}
+	}
+}
