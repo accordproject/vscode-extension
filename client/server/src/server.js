@@ -14,6 +14,7 @@ const fs = require("fs");
 const path = require("path");
 const fileUriToPath_1 = require("./fileUriToPath");
 const util = require('util');
+const cicero_core_1 = require("@accordproject/cicero-core");
 const ergo_compiler_1 = require("@accordproject/ergo-compiler");
 const composer_concerto_1 = require("composer-concerto");
 // Creates the LSP connection
@@ -26,45 +27,91 @@ const FULL_RANGE = {
     start: { line: 0, character: 0 },
     end: { line: 0, character: 0 },
 };
-function getRange(err) {
-    if (err.fileLocation) {
+/**
+ * Lots of hacks to extract line numbers from exceptions
+ *
+ * @param error the exception
+ */
+function getRange(error) {
+    if (error.fileLocation) {
         return {
-            start: { line: err.fileLocation.start.line - 1, character: err.fileLocation.start.column },
-            end: { line: err.fileLocation.end.line - 1, character: err.fileLocation.end.column }
+            start: { line: error.fileLocation.start.line - 1, character: error.fileLocation.start.column },
+            end: { line: error.fileLocation.end.line - 1, character: error.fileLocation.end.column }
         };
     }
-    else {
-        return FULL_RANGE;
+    else if (error.descriptor) {
+        if (error.descriptor.kind === 'CompilationError' || error.descriptor.kind === 'TypeError') {
+            if (error.descriptor.locstart.line > 0) {
+                const startRange = { line: error.descriptor.locstart.line - 1, character: error.descriptor.locstart.character };
+                return {
+                    start: startRange,
+                    end: startRange
+                };
+            }
+            if (error.descriptor.locend.line > 0) {
+                return {
+                    start: { line: 0, character: 0 },
+                    end: { line: error.descriptor.locend.line - 1, character: error.descriptor.locend.character }
+                };
+            }
+        }
+        else {
+            return {
+                start: { line: error.descriptor.locstart.line - 1, character: error.descriptor.locstart.character },
+                end: { line: error.descriptor.locend.line - 1, character: error.descriptor.locend.character },
+            };
+        }
     }
+    return FULL_RANGE;
 }
 /**
- * Utility method to create a diagnostic
- * @param fileUri the URI of the associated file
- * @param severity the severity of the error
- * @param range the range for the error
- * @param errorMessage the error message
- * @param type the type of the message
- * @param relatedMessage any additional message
+ * A cache of TemplateLogic instances. The keys are
+ * the root folder names. The values are the TemplateLogic instances.
+ * Note that we will leak instances if people rename the root folder...
  */
-function createDiagnostic(fileUri, severity, range, errorMessage, type, relatedMessage) {
+const templateCache = {};
+/**
+ *
+ * @param textDocument
+ * @param error
+ * @param type
+ */
+function pushError(textDocument, error, type, diagnostics) {
+    connection.console.log(util.inspect(error, false, null));
+    let fileName = error.fileName;
+    // hack to extract the filename from the verbose message
+    if (!fileName && error.descriptor && error.descriptor.verbose) {
+        const regex = /.+at file (.+\.ergo).+/gm;
+        const match = regex.exec(error.descriptor.verbose);
+        connection.console.log(`Match: ${match}`);
+        if (match && match.length > 0) {
+            fileName = match[1];
+            connection.console.log(`fileName: ${fileName}`);
+        }
+    }
+    // hack to extract the filename from the model file
+    if (!fileName && error.getModelFile && error.getModelFile()) {
+        fileName = error.getModelFile().getName();
+    }
     let diagnostic = {
-        severity: severity,
-        range: fileUri, FULL_RANGE, range,
-        message: errorMessage,
+        severity: vscode_languageserver_1.DiagnosticSeverity.Error,
+        range: getRange(error),
+        message: error.message,
         source: type
     };
-    if (fileUri) {
+    // if we have a fileName, then we use it
+    if (fileName && textDocument.uri !== fileName) {
         diagnostic.relatedInformation = [
             {
                 location: {
-                    uri: fileUri,
-                    range: Object.assign({}, range)
+                    uri: fileName,
+                    range: Object.assign({}, getRange(error))
                 },
-                message: relatedMessage
+                message: error.message
             },
         ];
     }
-    return diagnostic;
+    diagnostics.push(diagnostic);
 }
 documents.onDidOpen((event) => {
     connection.console.log(`[Server(${process.pid}) ${workspaceFolder}] Document opened: ${event.document.uri}`);
@@ -95,17 +142,99 @@ documents.onDidChangeContent((change) => __awaiter(this, void 0, void 0, functio
  */
 function validateTextDocument(textDocument) {
     return __awaiter(this, void 0, void 0, function* () {
-        let diagnostics = [];
+        connection.console.log(`File modified: ${textDocument.uri}`);
+        const diagnostics = [];
+        const pathStr = path.resolve(fileUriToPath_1.default(textDocument.uri));
+        const fileExtension = path.extname(pathStr);
+        // this will assemble all the models into a ModelManager
+        // and validate - so it needs to always run before we do anything else
+        yield validateModels(textDocument, diagnostics);
+        // if the model is valid, then we proceed
+        if (diagnostics.length === 0) {
+            switch (fileExtension) {
+                case '.cto':
+                    // if a cto file has been modified then we check all ergo files and the template
+                    yield compileErgoFiles(textDocument, diagnostics);
+                    // if ergo is valid we proceed to check the template
+                    if (diagnostics.length === 0) {
+                        yield validateTemplateFile(textDocument, diagnostics);
+                    }
+                    break;
+                case '.ergo':
+                    // if ergo code has changed, we recompile all ergo
+                    yield compileErgoFiles(textDocument, diagnostics);
+                    break;
+                case '.tem':
+                    // if a template file has changed, we check we can parse sample.txt
+                    yield validateTemplateFile(textDocument, diagnostics);
+                    break;
+            }
+        }
+        connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+    });
+}
+/**
+ * Validate a change to an ergo file: we recompile all ergo files.
+ *
+ * @param textDocument - a TextDocument (Ergo file or a CTO file)
+ */
+function compileErgoFiles(textDocument, diagnostics) {
+    return __awaiter(this, void 0, void 0, function* () {
         try {
-            connection.console.log(`File modified: ${textDocument.uri}`);
             const pathStr = path.resolve(fileUriToPath_1.default(textDocument.uri));
             const folder = pathStr.substring(0, pathStr.lastIndexOf("/") + 1);
             // review DCS - this assumes that we don't have sub-folders under models or lib
             const parentDir = path.resolve(`${folder}../`);
-            const thisTemplateLogic = new ergo_compiler_1.TemplateLogic('cicero');
-            connection.console.log(`Validating template logic for: ${parentDir}`);
-            const thisModelManager = thisTemplateLogic.getModelManager();
-            thisModelManager.clearModelFiles();
+            // get the template logic from cache
+            let templateLogic = templateCache[parentDir];
+            connection.console.log(`Compiling ergo files under: ${parentDir}`);
+            try {
+                // Find all ergo files in ./ relative to this file
+                const ergoFiles = glob_1.glob.sync(`{${folder},${parentDir}/lib/}**/*.ergo`);
+                for (const file of ergoFiles) {
+                    if (file === pathStr) {
+                        // Update the current file being edited
+                        templateLogic.updateLogic(textDocument.getText(), pathStr);
+                    }
+                    else {
+                        connection.console.log(file);
+                        const contents = fs.readFileSync(file, 'utf8');
+                        templateLogic.updateLogic(contents, file);
+                    }
+                }
+                yield templateLogic.compileLogic(true);
+            }
+            catch (error) {
+                pushError(textDocument, error, 'logic', diagnostics);
+            }
+        }
+        catch (error) {
+            connection.console.error(error.message);
+            connection.console.error(error.stack);
+        }
+    });
+}
+/**
+ * Rebuild the model manager and validates all the models
+ *
+ * @param textDocument - a TextDocument
+ */
+function validateModels(textDocument, diagnostics) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const pathStr = path.resolve(fileUriToPath_1.default(textDocument.uri));
+            const folder = pathStr.substring(0, pathStr.lastIndexOf("/") + 1);
+            // review DCS - this assumes that we don't have sub-folders under models or lib
+            const parentDir = path.resolve(`${folder}../`);
+            connection.console.log(`Validating model files under: ${parentDir}`);
+            // get the template logic from cache
+            let templateLogic = templateCache[parentDir];
+            if (!templateLogic) {
+                templateLogic = new ergo_compiler_1.TemplateLogic('cicero');
+                templateCache[parentDir] = templateLogic;
+            }
+            const modelManager = templateLogic.getModelManager();
+            modelManager.clearModelFiles();
             // Find all cto files in ./ relative to this file or in the parent directory if this is a Cicero template.
             const modelFiles = glob_1.glob.sync(`{${folder},${parentDir}/models/}**/*.cto`);
             // validate the model files
@@ -120,95 +249,65 @@ function validateTextDocument(textDocument) {
                     else {
                         contents = fs.readFileSync(file, 'utf8');
                     }
-                    const modelFile = new composer_concerto_1.ModelFile(thisModelManager, contents, file);
-                    if (!thisModelManager.getModelFile(modelFile.getNamespace())) {
-                        thisModelManager.addModelFile(contents, file, true);
+                    const modelFile = new composer_concerto_1.ModelFile(modelManager, contents, file);
+                    if (!modelManager.getModelFile(modelFile.getNamespace())) {
+                        modelManager.addModelFile(contents, file, true);
                     }
                     else {
-                        thisModelManager.updateModelFile(contents, file, true);
+                        modelManager.updateModelFile(contents, file, true);
                     }
                 }
                 // download external dependencies and validate
-                yield thisModelManager.updateExternalModels();
-            }
-            catch (err) {
-                connection.console.log(`Concerto error: ${err}`);
-                let fileName = err.fileName;
-                connection.console.log(util.inspect(err, false, null));
-                if (!fileName && err.getModelFile()) {
-                    fileName = err.getModelFile().getName();
-                    connection.console.log(`*** fileName: ${fileName}`);
-                }
-                let diagnostic = createDiagnostic(fileName, vscode_languageserver_1.DiagnosticSeverity.Error, getRange(err), err.message, 'concerto', 'Model error');
-                diagnostics.push(diagnostic);
-            }
-            // validate the ergo files
-            try {
-                // Find all ergo files in ./ relative to this file
-                const ergoFiles = glob_1.glob.sync(`{${folder},${parentDir}/lib/}**/*.ergo`);
-                for (const file of ergoFiles) {
-                    if (file === pathStr) {
-                        // Update the current file being edited
-                        thisTemplateLogic.updateLogic(textDocument.getText(), pathStr);
-                    }
-                    else {
-                        connection.console.log(file);
-                        const contents = fs.readFileSync(file, 'utf8');
-                        thisTemplateLogic.updateLogic(contents, file);
-                    }
-                }
-                const compiled = yield thisTemplateLogic.compileLogic(true);
+                yield modelManager.updateExternalModels();
             }
             catch (error) {
-                const descriptor = error.descriptor;
-                connection.console.log(`Ergo error: ${error}`);
-                let fileName = null;
-                if (descriptor) {
-                    if (descriptor.verbose) {
-                        // review (DCS) hack to extract the filename from the verbose message
-                        const regex = /.+at file (.+\.ergo).+/gm;
-                        const match = regex.exec(descriptor.verbose);
-                        connection.console.log(`Match: ${match}`);
-                        if (match.length > 0) {
-                            fileName = match[1];
-                            connection.console.log(`fileName: ${fileName}`);
-                        }
-                    }
-                    const range = JSON.parse(JSON.stringify(FULL_RANGE));
-                    if (descriptor.kind === 'CompilationError' || descriptor.kind === 'TypeError') {
-                        if (descriptor.locstart.line > 0) {
-                            range.start = { line: descriptor.locstart.line - 1, character: descriptor.locstart.character };
-                            range.end = range.start;
-                        }
-                        if (descriptor.locend.line > 0) {
-                            range.end = { line: descriptor.locend.line - 1, character: descriptor.locend.character };
-                        }
-                        let diagnostic = createDiagnostic(fileName, vscode_languageserver_1.DiagnosticSeverity.Error, range, descriptor.message, 'ergo', 'Ergo error');
-                        diagnostics.push(diagnostic);
-                    }
-                    else {
-                        let diagnostic = createDiagnostic(fileName, vscode_languageserver_1.DiagnosticSeverity.Error, {
-                            start: { line: descriptor.locstart.line - 1, character: descriptor.locstart.character },
-                            end: { line: descriptor.locend.line - 1, character: descriptor.locend.character },
-                        }, descriptor.message, 'ergo', 'Ergo error');
-                        diagnostics.push(diagnostic);
-                    }
-                }
-                else {
-                    if (error.getModelFile()) {
-                        fileName = error.getModelFile().getName();
-                        connection.console.log(`fileName: ${fileName}`);
-                    }
-                    let diagnostic = createDiagnostic(fileName, vscode_languageserver_1.DiagnosticSeverity.Error, range, error.message, 'ergo', 'Ergo error');
-                    diagnostics.push(diagnostic);
-                }
+                pushError(textDocument, error, 'model', diagnostics);
             }
         }
         catch (error) {
             connection.console.error(error.message);
             connection.console.error(error.stack);
         }
-        connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+    });
+}
+/**
+ * Validates a Cicero template file
+ *
+ * @param textDocument - a TextDocument
+ */
+function validateTemplateFile(textDocument, diagnostics) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const pathStr = path.resolve(fileUriToPath_1.default(textDocument.uri));
+            const folder = pathStr.substring(0, pathStr.lastIndexOf("/") + 1);
+            // review DCS - this assumes that we don't have sub-folders under models or lib
+            const parentDir = path.resolve(`${folder}../`);
+            try {
+                connection.console.log(`Validating template under: ${parentDir}`);
+                const template = yield cicero_core_1.Template.fromDirectory(parentDir);
+                template.parserManager.buildGrammar(textDocument.getText());
+                template.validate();
+                try {
+                    connection.console.log(`Built template: ${template.getIdentifier()}`);
+                    const sample = fs.readFileSync(parentDir + '/sample.txt', 'utf8');
+                    const clause = new cicero_core_1.Clause(template);
+                    clause.parse(sample);
+                    connection.console.log(`Parsed sample.text: ${JSON.stringify(clause.getData(), null, 2)}`);
+                }
+                catch (error) {
+                    error.fileName = parentDir + '/sample.txt';
+                    pushError(textDocument, error, 'template', diagnostics);
+                }
+            }
+            catch (error) {
+                error.fileName = parentDir + '/grammar/template.tem';
+                pushError(textDocument, error, 'template', diagnostics);
+            }
+        }
+        catch (error) {
+            connection.console.error(error.message);
+            connection.console.error(error.stack);
+        }
     });
 }
 connection.listen();
