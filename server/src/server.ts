@@ -122,7 +122,7 @@ function getRange(error: any) {
 
 /**
  * Converts an error (exception) to a VSCode Diagnostic and
- * pushes it onto the global diagnosticMap
+ * pushes it onto the diagnosticMap
  * @param textDocument the text document associated (the doc that has been modified)
  * @param error the exception
  * @param type the type of the exception
@@ -184,6 +184,14 @@ function pushError(textDocument: TextDocument, error : any, type : string, diagn
     diagnosticMap[fileName].add(diagnostic);
 }
 
+/**
+ * Declares that a file has no errors in the diagnostic map.
+ * We need to call this on all files that DO NOT have errors
+ * to ensure that error markers are removed.
+ * 
+ * @param fileName the uri of the file
+ * @param diagnosticMap the diagnostic map
+ */
 function validFile(fileName, diagnosticMap) {
     diagnosticMap[fileName] = new Set();
 }
@@ -236,27 +244,20 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
         connection.console.log(`*** Document modified: ${textDocument.uri}`);
 
         /**
-         * A cache of TemplateLogic instances. The keys are
-         * the root folder names. The values are the TemplateLogic instances.
-         * Note that we will leak instances if people rename the root folders...
+         * A cache of TemplateLogic instances. The keys are the root folder names.
          */
         const templateCache = {};
 
         /**
          * Map of diagnostics, with the key being the document URI
-         * and the value being the array of Diagnostic instances
+         * and the value being a Set of Diagnostic instances
          */
         const diagnosticMap = {
         }
 
         const pathStr = path.resolve(fileUriToPath(textDocument.uri));
         const fileExtension = path.extname(pathStr);
-    
-        // clear the diagnosticMap
-        Object.keys(diagnosticMap).forEach(function(key) {
-            diagnosticMap[key] = [];
-        });
-    
+        
         // this will assemble all the models into a ModelManager
         // and validate - so it needs to always run before we do anything else
         const modelValid = await validateModels(textDocument, diagnosticMap, templateCache);
@@ -270,7 +271,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
     
                         // if ergo is valid we proceed to check the template
                         if(ergoValid) {
-                            // await validateTemplateFile(textDocument, diagnosticMap);
+                            await validateTemplateFile(textDocument, diagnosticMap);
                         }
                     break;
                 case '.ergo':
@@ -279,7 +280,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
                     break;
                 case '.tem':
                     // if a template file has changed, we check we can build the template
-                    // await validateTemplateFile(textDocument);
+                    await validateTemplateFile(textDocument, diagnosticMap);
                     break;
             }    
         }
@@ -438,7 +439,7 @@ async function validateTemplateFile(textDocument: TextDocument, diagnosticMap): 
             
             try {
                 connection.console.log(`Built template: ${template.getIdentifier()}`);
-                validFile(parentDir + '/grammar/sample.txt', diagnosticMap);
+                validFile(parentDir + '/sample.txt', diagnosticMap);
                 const sample = fs.readFileSync(parentDir + '/sample.txt', 'utf8');
                 const clause = new Clause(template);
                 clause.parse(sample);
