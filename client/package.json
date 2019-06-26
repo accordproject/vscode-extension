@@ -1,7 +1,7 @@
 {
 	"name": "cicero-vscode-extension",
 	"displayName": "Accord Project",
-	"description": "Accord Project plugin for Visual Studio Code to provide syntax highlighting for Ergo code (.ergo) and template grammar (.tem) files.",
+	"description": "Accord Project extension for Visual Studio Code, providing tools for template development.",
 	"author": "Clause",
 	"license": "Apache-2.0",
 	"version": "0.7.5",

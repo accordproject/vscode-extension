@@ -1,15 +1,19 @@
 # Accord Project Extension for VSCode
 
-Validate Smart Legal Contracts that conform to the [Accord Project Template Specification](https://docs.google.com/document/d/1UacA_r2KGcBA2D4voDgGE8jqid-Uh4Dt09AE-shBKR0/edit)
+Validates that Cicero templates conform to the [Accord Project Template Specification](https://docs.accordproject.org):
 
-This VSCode extension parses '.ergo' files using the Ergo parser
-and reports any validation errors. It will provide syntax highlighting for template grammar files (.tem) 
+- Validates the model for the template ('.cto' files), downloading referenced external models as required
+- Validates the logic of the template ('.ergo' files) 
+- Validates that the template archive can be built
+- Validates that the 'sample.txt' file for the template can be parsed using the template grammar ('.tem' file)
+- Syntax highlighting for all files
 
 ## For Template Authors
 
 If you want to use this plugin:
-1. Download and install VSCode from https://code.visualstudio.com/download
-2. From the extensions view in VSCode, search for "Accord Project", click the `Install` button to install it
+1. Remove any existing versions of the Ergo extension and the Hyperledger Composer extension
+2. Download and install VSCode from https://code.visualstudio.com/download
+3. From the extensions view in VSCode, search for "Accord Project", click the `Install` button to install it
 
 The extension is available from the Visual Studio Marketplace at https://marketplace.visualstudio.com/items?itemName=accordproject.accordproject-vscode-plugin
 
@@ -43,7 +47,7 @@ The public release version number is defined in the Client package.json file.
 
 #### Publish Release
 Below are steps for publishing a release.
-1. Go to https://github.com/accordproject/ergo-vscode-plugin
+1. Go to https://github.com/accordproject/cicero-vscode-plugin
 2. Click Releases tab
 3. Click Draft a new release on the right
 4. Type a Tag version in the Tag version field. e.g. v0.5.7.1
@@ -67,7 +71,7 @@ Below are steps for publishing a release.
 
 ## Acknowledgements
 
-Thanks to our friends at Hyperledger Composer for their existing plugin, 
+Thanks to our friends at Hyperledger Composer for inspiring us with their existing plugin, 
 https://github.com/hyperledger/composer-vscode-plugin/
 
 ## License <a name="license"></a>

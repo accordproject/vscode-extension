@@ -1,3 +1,16 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 'use strict';
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -13,24 +26,56 @@ const glob_1 = require("glob");
 const fs = require("fs");
 const path = require("path");
 const fileUriToPath_1 = require("./fileUriToPath");
-const util = require('util');
 const cicero_core_1 = require("@accordproject/cicero-core");
 const ergo_compiler_1 = require("@accordproject/ergo-compiler");
 const composer_concerto_1 = require("composer-concerto");
+const util = require('util');
 // Creates the LSP connection
 let connection = vscode_languageserver_1.createConnection(vscode_languageserver_1.ProposedFeatures.all);
 // Create a manager for open text documents
 let documents = new vscode_languageserver_1.TextDocuments();
 // The workspace folder this server is operating on
 let workspaceFolder;
+// an empty range (this will highlight the first word in the document)
 const FULL_RANGE = {
     start: { line: 0, character: 0 },
     end: { line: 0, character: 0 },
 };
 /**
+ * Gets the root file path for a template, from a path under the root, by walking
+ * up the directory hierarchy looking for a package.json file that contains the
+ * 'accordproject' key. If a valid package.json is missing then a diagnostic error is
+ * pushed for the textDocument and null is returned
+ * @param {string} pathStr the full path
+ * @param {TextDocument} textDocument the textDocument we are processing
+ * @returns {string} the root file path
+ */
+function getTemplateRoot(pathStr, textDocument, diagnosticMap) {
+    let currentPath = pathStr;
+    while (currentPath !== '.') {
+        connection.console.log(`- ${currentPath}`);
+        try {
+            const packageJsonContents = fs.readFileSync(currentPath + '/package.json', 'utf8');
+            const packageJson = JSON.parse(packageJsonContents);
+            if (packageJson.accordproject) {
+                return currentPath;
+            }
+        }
+        catch (err) {
+            connection.console.log(`- exception ${err}`);
+            currentPath = path.normalize(path.join(currentPath, '..'));
+        }
+    }
+    connection.console.log(`Failed to find template path for ${pathStr}`);
+    const error = { message: `${pathStr} is not a sub-folder of an Accord Project template. Ensure a parent folder contains a valid package.json.` };
+    pushError(textDocument, error, 'template', diagnosticMap);
+    return null;
+}
+/**
  * Lots of hacks to extract line numbers from exceptions
  *
  * @param error the exception
+ * @returns the range object
  */
 function getRange(error) {
     if (error.fileLocation) {
@@ -65,18 +110,13 @@ function getRange(error) {
     return FULL_RANGE;
 }
 /**
- * A cache of TemplateLogic instances. The keys are
- * the root folder names. The values are the TemplateLogic instances.
- * Note that we will leak instances if people rename the root folder...
+ * Converts an error (exception) to a VSCode Diagnostic and
+ * pushes it onto the global diagnosticMap
+ * @param textDocument the text document associated (the doc that has been modified)
+ * @param error the exception
+ * @param type the type of the exception
  */
-const templateCache = {};
-/**
- *
- * @param textDocument
- * @param error
- * @param type
- */
-function pushError(textDocument, error, type, diagnostics) {
+function pushError(textDocument, error, type, diagnosticMap) {
     connection.console.log(util.inspect(error, false, null));
     let fileName = error.fileName;
     // hack to extract the filename from the verbose message
@@ -99,24 +139,46 @@ function pushError(textDocument, error, type, diagnostics) {
         message: error.message,
         source: type
     };
-    // if we have a fileName, then we use it
-    if (fileName && textDocument.uri !== fileName) {
-        diagnostic.relatedInformation = [
-            {
-                location: {
-                    uri: fileName,
-                    range: Object.assign({}, getRange(error))
-                },
-                message: error.message
-            },
-        ];
+    // last resort, we assume the error is related
+    // to the document that was just changed
+    if (!fileName) {
+        fileName = textDocument.uri;
     }
-    diagnostics.push(diagnostic);
+    // if we have a fileName, that is different from the
+    // file that was just modified then we create related information
+    // if(fileName && textDocument.uri !== fileName) {
+    //     diagnostic.relatedInformation = [
+    //         {
+    //           location: {
+    //             uri: fileName,
+    //             range: Object.assign({}, getRange(error))
+    //           },
+    //           message: error.message
+    //         },
+    //       ];    
+    // }
+    // add the diagnostic
+    if (!diagnosticMap[fileName]) {
+        diagnosticMap[fileName] = new Set();
+    }
+    diagnosticMap[fileName].add(diagnostic);
 }
+function validFile(fileName, diagnosticMap) {
+    diagnosticMap[fileName] = new Set();
+}
+/**
+ * Called when a document is opened
+ */
 documents.onDidOpen((event) => {
     connection.console.log(`[Server(${process.pid}) ${workspaceFolder}] Document opened: ${event.document.uri}`);
 });
+/**
+ * Connect the document connection to the client
+ */
 documents.listen(connection);
+/**
+ * Called when the extension initializes
+ */
 connection.onInitialize((params) => {
     workspaceFolder = params.rootUri;
     connection.console.log(`[Server(${process.pid}) ${workspaceFolder}] Started and initialize received`);
@@ -129,71 +191,102 @@ connection.onInitialize((params) => {
         }
     };
 });
-// The content of a text document has changed. This event is emitted
-// when the text document is first opened or when its content has changed.
+/**
+ * The content of a text document has changed. This event is emitted
+ * when the text document is first opened or when its content has changed.
+ */
 documents.onDidChangeContent((change) => __awaiter(this, void 0, void 0, function* () {
     // Revalidate any open text documents
     documents.all().forEach(validateTextDocument);
 }));
 /**
- * Validate Ergo and CTO files.
+ * Called when the contents of a document changes
  *
  * @param textDocument - a TextDocument
  */
 function validateTextDocument(textDocument) {
     return __awaiter(this, void 0, void 0, function* () {
-        connection.console.log(`File modified: ${textDocument.uri}`);
-        const diagnostics = [];
-        const pathStr = path.resolve(fileUriToPath_1.default(textDocument.uri));
-        const fileExtension = path.extname(pathStr);
-        // this will assemble all the models into a ModelManager
-        // and validate - so it needs to always run before we do anything else
-        yield validateModels(textDocument, diagnostics);
-        // if the model is valid, then we proceed
-        if (diagnostics.length === 0) {
-            switch (fileExtension) {
-                case '.cto':
-                    // if a cto file has been modified then we check all ergo files and the template
-                    yield compileErgoFiles(textDocument, diagnostics);
-                    // if ergo is valid we proceed to check the template
-                    if (diagnostics.length === 0) {
-                        yield validateTemplateFile(textDocument, diagnostics);
-                    }
-                    break;
-                case '.ergo':
-                    // if ergo code has changed, we recompile all ergo
-                    yield compileErgoFiles(textDocument, diagnostics);
-                    break;
-                case '.tem':
-                    // if a template file has changed, we check we can parse sample.txt
-                    yield validateTemplateFile(textDocument, diagnostics);
-                    break;
+        try {
+            connection.console.log(`*** Document modified: ${textDocument.uri}`);
+            /**
+             * A cache of TemplateLogic instances. The keys are
+             * the root folder names. The values are the TemplateLogic instances.
+             * Note that we will leak instances if people rename the root folders...
+             */
+            const templateCache = {};
+            /**
+             * Map of diagnostics, with the key being the document URI
+             * and the value being the array of Diagnostic instances
+             */
+            const diagnosticMap = {};
+            const pathStr = path.resolve(fileUriToPath_1.default(textDocument.uri));
+            const fileExtension = path.extname(pathStr);
+            // clear the diagnosticMap
+            Object.keys(diagnosticMap).forEach(function (key) {
+                diagnosticMap[key] = [];
+            });
+            // this will assemble all the models into a ModelManager
+            // and validate - so it needs to always run before we do anything else
+            const modelValid = yield validateModels(textDocument, diagnosticMap, templateCache);
+            // if the model is valid, then we proceed
+            if (modelValid) {
+                switch (fileExtension) {
+                    case '.cto':
+                        // if a cto file has been modified then we check all ergo files and the template
+                        const ergoValid = yield compileErgoFiles(textDocument, diagnosticMap, templateCache);
+                        // if ergo is valid we proceed to check the template
+                        if (ergoValid) {
+                            // await validateTemplateFile(textDocument, diagnosticMap);
+                        }
+                        break;
+                    case '.ergo':
+                        // if ergo code has changed, we recompile all ergo
+                        yield compileErgoFiles(textDocument, diagnosticMap, templateCache);
+                        break;
+                    case '.tem':
+                        // if a template file has changed, we check we can build the template
+                        // await validateTemplateFile(textDocument);
+                        break;
+                }
             }
+            // send all the diagnostics we have accumulated back to the client
+            Object.keys(diagnosticMap).forEach(function (key) {
+                const fileDiagnostics = diagnosticMap[key];
+                connection.sendDiagnostics({ uri: key, diagnostics: [...fileDiagnostics] });
+            });
         }
-        connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+        catch (error) {
+            connection.console.error(error.message);
+            connection.console.error(error.stack);
+        }
     });
 }
 /**
  * Validate a change to an ergo file: we recompile all ergo files.
  *
  * @param textDocument - a TextDocument (Ergo file or a CTO file)
+ * @return Promise<boolean> true the ergo files are valid
  */
-function compileErgoFiles(textDocument, diagnostics) {
+function compileErgoFiles(textDocument, diagnosticMap, templateCache) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const pathStr = path.resolve(fileUriToPath_1.default(textDocument.uri));
             const folder = pathStr.substring(0, pathStr.lastIndexOf("/") + 1);
-            // review DCS - this assumes that we don't have sub-folders under models or lib
-            const parentDir = path.resolve(`${folder}../`);
-            // get the template logic from cache
-            let templateLogic = templateCache[parentDir];
-            connection.console.log(`Compiling ergo files under: ${parentDir}`);
+            const parentDir = getTemplateRoot(pathStr, textDocument, diagnosticMap);
+            if (!parentDir) {
+                return false;
+            }
             try {
+                // get the template logic from cache
+                let templateLogic = templateCache[parentDir];
+                connection.console.log(`Compiling ergo files under: ${parentDir}`);
                 // Find all ergo files in ./ relative to this file
                 const ergoFiles = glob_1.glob.sync(`{${folder},${parentDir}/lib/}**/*.ergo`);
                 for (const file of ergoFiles) {
+                    validFile(file, diagnosticMap);
                     if (file === pathStr) {
                         // Update the current file being edited
+                        connection.console.log(`**** using contents for: ${textDocument.uri}`);
                         templateLogic.updateLogic(textDocument.getText(), pathStr);
                     }
                     else {
@@ -203,29 +296,34 @@ function compileErgoFiles(textDocument, diagnostics) {
                     }
                 }
                 yield templateLogic.compileLogic(true);
+                return true;
             }
             catch (error) {
-                pushError(textDocument, error, 'logic', diagnostics);
+                pushError(textDocument, error, 'logic', diagnosticMap);
             }
         }
         catch (error) {
             connection.console.error(error.message);
             connection.console.error(error.stack);
         }
+        return false;
     });
 }
 /**
  * Rebuild the model manager and validates all the models
  *
  * @param textDocument - a TextDocument
+ * @return Promise<boolean> true the model is valid
  */
-function validateModels(textDocument, diagnostics) {
+function validateModels(textDocument, diagnosticMap, templateCache) {
     return __awaiter(this, void 0, void 0, function* () {
+        const pathStr = path.resolve(fileUriToPath_1.default(textDocument.uri));
+        const folder = pathStr.substring(0, pathStr.lastIndexOf("/") + 1);
         try {
-            const pathStr = path.resolve(fileUriToPath_1.default(textDocument.uri));
-            const folder = pathStr.substring(0, pathStr.lastIndexOf("/") + 1);
-            // review DCS - this assumes that we don't have sub-folders under models or lib
-            const parentDir = path.resolve(`${folder}../`);
+            const parentDir = getTemplateRoot(pathStr, textDocument, diagnosticMap);
+            if (!parentDir) {
+                return false;
+            }
             connection.console.log(`Validating model files under: ${parentDir}`);
             // get the template logic from cache
             let templateLogic = templateCache[parentDir];
@@ -240,11 +338,12 @@ function validateModels(textDocument, diagnostics) {
             // validate the model files
             try {
                 for (const file of modelFiles) {
-                    connection.console.log(file);
+                    validFile(file, diagnosticMap);
                     let contents = null;
                     if (file === pathStr) {
                         // Update the current file being edited
                         contents = textDocument.getText();
+                        connection.console.log(`**** using contents for: ${textDocument.uri}`);
                     }
                     else {
                         contents = fs.readFileSync(file, 'utf8');
@@ -259,55 +358,63 @@ function validateModels(textDocument, diagnostics) {
                 }
                 // download external dependencies and validate
                 yield modelManager.updateExternalModels();
+                return true;
             }
             catch (error) {
-                pushError(textDocument, error, 'model', diagnostics);
+                pushError(textDocument, error, 'model', diagnosticMap);
             }
         }
         catch (error) {
             connection.console.error(error.message);
             connection.console.error(error.stack);
         }
+        return false;
     });
 }
 /**
- * Validates a Cicero template file
+ * Validate that we can build the template archive and parse sample.txt
  *
  * @param textDocument - a TextDocument
+ * @return Promise<boolean> true the template and sample.txt are valid
  */
-function validateTemplateFile(textDocument, diagnostics) {
+function validateTemplateFile(textDocument, diagnosticMap) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const pathStr = path.resolve(fileUriToPath_1.default(textDocument.uri));
-            const folder = pathStr.substring(0, pathStr.lastIndexOf("/") + 1);
-            // review DCS - this assumes that we don't have sub-folders under models or lib
-            const parentDir = path.resolve(`${folder}../`);
+            const parentDir = getTemplateRoot(pathStr, textDocument, diagnosticMap);
+            if (!parentDir) {
+                return false;
+            }
             try {
                 connection.console.log(`Validating template under: ${parentDir}`);
+                validFile(parentDir + '/grammar/template.tem', diagnosticMap);
                 const template = yield cicero_core_1.Template.fromDirectory(parentDir);
                 template.parserManager.buildGrammar(textDocument.getText());
                 template.validate();
                 try {
                     connection.console.log(`Built template: ${template.getIdentifier()}`);
+                    validFile(parentDir + '/grammar/sample.txt', diagnosticMap);
                     const sample = fs.readFileSync(parentDir + '/sample.txt', 'utf8');
                     const clause = new cicero_core_1.Clause(template);
                     clause.parse(sample);
                     connection.console.log(`Parsed sample.text: ${JSON.stringify(clause.getData(), null, 2)}`);
+                    return true;
                 }
                 catch (error) {
                     error.fileName = parentDir + '/sample.txt';
-                    pushError(textDocument, error, 'template', diagnostics);
+                    pushError(textDocument, error, 'sample', diagnosticMap);
                 }
             }
             catch (error) {
                 error.fileName = parentDir + '/grammar/template.tem';
-                pushError(textDocument, error, 'template', diagnostics);
+                pushError(textDocument, error, 'template', diagnosticMap);
             }
         }
         catch (error) {
             connection.console.error(error.message);
             connection.console.error(error.stack);
         }
+        return false;
     });
 }
 connection.listen();
