@@ -62,7 +62,7 @@ function getTemplateRoot(pathStr, textDocument, diagnosticMap) {
         connection.console.log( `- ${currentPath}`);
 
         try {
-            const packageJsonContents = fs.readFileSync(currentPath + '/package.json', 'utf8');
+            const packageJsonContents = getEditedFileContents(currentPath + '/package.json');
             const packageJson = JSON.parse(packageJsonContents);
             if(packageJson.accordproject) {
                 return currentPath;
@@ -76,8 +76,30 @@ function getTemplateRoot(pathStr, textDocument, diagnosticMap) {
 
     connection.console.log( `Failed to find template path for ${pathStr}`);
     const error = {message: `${pathStr} is not a sub-folder of an Accord Project template. Ensure a parent folder contains a valid package.json.`};
-    pushError(textDocument, error, 'template', diagnosticMap);
+    pushDiagnostic(DiagnosticSeverity.Error, textDocument, error, 'template', diagnosticMap);
     return null;
+}
+
+/**
+ * Returns the contents of a file from disk, or if the file
+ * has been opened for editing, then the edited contents is returned.
+ * @param file 
+ */
+function getEditedFileContents(file) {
+
+    const key = 'file://' + file;
+    const document = documents.get(key);
+
+    connection.console.log(`Getting ${key}`)
+
+    if(document) {
+        connection.console.log(`- returning editor content`)
+        return document.getText();
+    }
+    else {
+        connection.console.log(`- returning file system content`)
+        return fs.readFileSync(file, 'utf8');    
+    }
 }
 
 /**
@@ -123,11 +145,12 @@ function getRange(error: any) {
 /**
  * Converts an error (exception) to a VSCode Diagnostic and
  * pushes it onto the diagnosticMap
+ * @param severity the severity level for the diagnostic
  * @param textDocument the text document associated (the doc that has been modified)
  * @param error the exception
  * @param type the type of the exception
  */
-function pushError(textDocument: TextDocument, error : any, type : string, diagnosticMap) {
+function pushDiagnostic(severity, textDocument: TextDocument, error : any, type : string, diagnosticMap) {
 
     connection.console.log(util.inspect(error, false, null))
 
@@ -150,7 +173,7 @@ function pushError(textDocument: TextDocument, error : any, type : string, diagn
     }
 
     let diagnostic: Diagnostic = {
-        severity: DiagnosticSeverity.Error,
+        severity,
         range: getRange(error),
         message: error.message,
         source: type
@@ -161,20 +184,6 @@ function pushError(textDocument: TextDocument, error : any, type : string, diagn
     if(!fileName) {
         fileName = textDocument.uri;
     }
-
-    // if we have a fileName, that is different from the
-    // file that was just modified then we create related information
-    // if(fileName && textDocument.uri !== fileName) {
-    //     diagnostic.relatedInformation = [
-    //         {
-    //           location: {
-    //             uri: fileName,
-    //             range: Object.assign({}, getRange(error))
-    //           },
-    //           message: error.message
-    //         },
-    //       ];    
-    // }
 
     // add the diagnostic
     if(!diagnosticMap[fileName]) {
@@ -340,20 +349,13 @@ async function compileErgoFiles(textDocument: TextDocument, diagnosticMap, templ
             const ergoFiles = glob.sync(`{${folder},${parentDir}/lib/}**/*.ergo`);
             for (const file of ergoFiles) {
                 clearErrors(file, 'logic', diagnosticMap);
-                if (file === pathStr) {
-                    // Update the current file being edited
-                    connection.console.log(`**** using contents for: ${textDocument.uri}`);
-                    templateLogic.updateLogic(textDocument.getText(), pathStr);
-                } else {
-                    connection.console.log(file);
-                    const contents = fs.readFileSync(file, 'utf8');
-                    templateLogic.updateLogic(contents, file);
-                }
+                const contents = getEditedFileContents(file);
+                templateLogic.updateLogic(contents, file);
             }
             await templateLogic.compileLogic(true);
             return true;
         } catch (error) {
-            pushError(textDocument, error, 'logic', diagnosticMap);
+            pushDiagnostic(DiagnosticSeverity.Error, textDocument, error, 'logic', diagnosticMap);
         }
     }
     catch(error) {
@@ -406,15 +408,7 @@ async function validateModels(textDocument: TextDocument, diagnosticMap, templat
         try {
             for (const file of modelFiles) {
                 clearErrors(file, 'model', diagnosticMap);
-                let contents = null;
-                if (file === pathStr) {
-                    // Update the current file being edited
-                    contents = textDocument.getText();
-                    connection.console.log(`**** using contents for: ${textDocument.uri}`);
-                } else {
-                    contents = fs.readFileSync(file, 'utf8');
-                }
-
+                const contents = getEditedFileContents(file);
                 const modelFile: any = new ModelFile(modelManager, contents, file);
                 if (!modelManager.getModelFile(modelFile.getNamespace())) {
                     modelManager.addModelFile(contents, file, true);
@@ -424,11 +418,17 @@ async function validateModels(textDocument: TextDocument, diagnosticMap, templat
             }
 
             // download external dependencies and validate
-            await modelManager.updateExternalModels();
+            try {
+                await modelManager.updateExternalModels();
+            }
+            catch(err) {
+                // we may be offline?
+                pushDiagnostic(DiagnosticSeverity.Warning, textDocument, err, 'model', diagnosticMap);
+            }
             return true;
         }
         catch(error) {
-            pushError(textDocument, error, 'model', diagnosticMap);
+            pushDiagnostic(DiagnosticSeverity.Error, textDocument, error, 'model', diagnosticMap);
         }
     }
     catch(error) {
@@ -466,7 +466,7 @@ async function validateTemplateFile(textDocument: TextDocument, diagnosticMap, t
         }
         catch(error) {
             error.fileName = parentDir + '/grammar/template.tem';
-            pushError(textDocument, error, 'template', diagnosticMap);
+            pushDiagnostic(DiagnosticSeverity.Error, textDocument, error, 'template', diagnosticMap);
         }
     }
     catch(error) {
@@ -509,7 +509,7 @@ async function parseSampleFile(textDocument: TextDocument, diagnosticMap, templa
         }
         catch(error) {
             error.fileName = textDocument.uri;
-            pushError(textDocument, error, 'sample', diagnosticMap);
+            pushDiagnostic(DiagnosticSeverity.Error, textDocument, error, 'sample', diagnosticMap);
         }
     }
     catch(error) {

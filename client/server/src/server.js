@@ -55,7 +55,7 @@ function getTemplateRoot(pathStr, textDocument, diagnosticMap) {
     while (currentPath !== '.') {
         connection.console.log(`- ${currentPath}`);
         try {
-            const packageJsonContents = fs.readFileSync(currentPath + '/package.json', 'utf8');
+            const packageJsonContents = getEditedFileContents(currentPath + '/package.json');
             const packageJson = JSON.parse(packageJsonContents);
             if (packageJson.accordproject) {
                 return currentPath;
@@ -68,8 +68,26 @@ function getTemplateRoot(pathStr, textDocument, diagnosticMap) {
     }
     connection.console.log(`Failed to find template path for ${pathStr}`);
     const error = { message: `${pathStr} is not a sub-folder of an Accord Project template. Ensure a parent folder contains a valid package.json.` };
-    pushError(textDocument, error, 'template', diagnosticMap);
+    pushDiagnostic(vscode_languageserver_1.DiagnosticSeverity.Error, textDocument, error, 'template', diagnosticMap);
     return null;
+}
+/**
+ * Returns the contents of a file from disk, or if the file
+ * has been opened for editing, then the edited contents is returned.
+ * @param file
+ */
+function getEditedFileContents(file) {
+    const key = 'file://' + file;
+    const document = documents.get(key);
+    connection.console.log(`Getting ${key}`);
+    if (document) {
+        connection.console.log(`- returning editor content`);
+        return document.getText();
+    }
+    else {
+        connection.console.log(`- returning file system content`);
+        return fs.readFileSync(file, 'utf8');
+    }
 }
 /**
  * Lots of hacks to extract line numbers from exceptions
@@ -112,11 +130,12 @@ function getRange(error) {
 /**
  * Converts an error (exception) to a VSCode Diagnostic and
  * pushes it onto the diagnosticMap
+ * @param severity the severity level for the diagnostic
  * @param textDocument the text document associated (the doc that has been modified)
  * @param error the exception
  * @param type the type of the exception
  */
-function pushError(textDocument, error, type, diagnosticMap) {
+function pushDiagnostic(severity, textDocument, error, type, diagnosticMap) {
     connection.console.log(util.inspect(error, false, null));
     let fileName = error.fileName;
     // hack to extract the filename from the verbose message
@@ -134,7 +153,7 @@ function pushError(textDocument, error, type, diagnosticMap) {
         fileName = error.getModelFile().getName();
     }
     let diagnostic = {
-        severity: vscode_languageserver_1.DiagnosticSeverity.Error,
+        severity,
         range: getRange(error),
         message: error.message,
         source: type
@@ -144,19 +163,6 @@ function pushError(textDocument, error, type, diagnosticMap) {
     if (!fileName) {
         fileName = textDocument.uri;
     }
-    // if we have a fileName, that is different from the
-    // file that was just modified then we create related information
-    // if(fileName && textDocument.uri !== fileName) {
-    //     diagnostic.relatedInformation = [
-    //         {
-    //           location: {
-    //             uri: fileName,
-    //             range: Object.assign({}, getRange(error))
-    //           },
-    //           message: error.message
-    //         },
-    //       ];    
-    // }
     // add the diagnostic
     if (!diagnosticMap[fileName]) {
         diagnosticMap[fileName] = new Set();
@@ -301,22 +307,14 @@ function compileErgoFiles(textDocument, diagnosticMap, templateCache) {
                 const ergoFiles = glob_1.glob.sync(`{${folder},${parentDir}/lib/}**/*.ergo`);
                 for (const file of ergoFiles) {
                     clearErrors(file, 'logic', diagnosticMap);
-                    if (file === pathStr) {
-                        // Update the current file being edited
-                        connection.console.log(`**** using contents for: ${textDocument.uri}`);
-                        templateLogic.updateLogic(textDocument.getText(), pathStr);
-                    }
-                    else {
-                        connection.console.log(file);
-                        const contents = fs.readFileSync(file, 'utf8');
-                        templateLogic.updateLogic(contents, file);
-                    }
+                    const contents = getEditedFileContents(file);
+                    templateLogic.updateLogic(contents, file);
                 }
                 yield templateLogic.compileLogic(true);
                 return true;
             }
             catch (error) {
-                pushError(textDocument, error, 'logic', diagnosticMap);
+                pushDiagnostic(vscode_languageserver_1.DiagnosticSeverity.Error, textDocument, error, 'logic', diagnosticMap);
             }
         }
         catch (error) {
@@ -363,15 +361,7 @@ function validateModels(textDocument, diagnosticMap, templateCache) {
             try {
                 for (const file of modelFiles) {
                     clearErrors(file, 'model', diagnosticMap);
-                    let contents = null;
-                    if (file === pathStr) {
-                        // Update the current file being edited
-                        contents = textDocument.getText();
-                        connection.console.log(`**** using contents for: ${textDocument.uri}`);
-                    }
-                    else {
-                        contents = fs.readFileSync(file, 'utf8');
-                    }
+                    const contents = getEditedFileContents(file);
                     const modelFile = new composer_concerto_1.ModelFile(modelManager, contents, file);
                     if (!modelManager.getModelFile(modelFile.getNamespace())) {
                         modelManager.addModelFile(contents, file, true);
@@ -381,11 +371,17 @@ function validateModels(textDocument, diagnosticMap, templateCache) {
                     }
                 }
                 // download external dependencies and validate
-                yield modelManager.updateExternalModels();
+                try {
+                    yield modelManager.updateExternalModels();
+                }
+                catch (err) {
+                    // we may be offline?
+                    pushDiagnostic(vscode_languageserver_1.DiagnosticSeverity.Warning, textDocument, err, 'model', diagnosticMap);
+                }
                 return true;
             }
             catch (error) {
-                pushError(textDocument, error, 'model', diagnosticMap);
+                pushDiagnostic(vscode_languageserver_1.DiagnosticSeverity.Error, textDocument, error, 'model', diagnosticMap);
             }
         }
         catch (error) {
@@ -421,7 +417,7 @@ function validateTemplateFile(textDocument, diagnosticMap, templateCache) {
             }
             catch (error) {
                 error.fileName = parentDir + '/grammar/template.tem';
-                pushError(textDocument, error, 'template', diagnosticMap);
+                pushDiagnostic(vscode_languageserver_1.DiagnosticSeverity.Error, textDocument, error, 'template', diagnosticMap);
             }
         }
         catch (error) {
@@ -459,7 +455,7 @@ function parseSampleFile(textDocument, diagnosticMap, templateCache) {
             }
             catch (error) {
                 error.fileName = textDocument.uri;
-                pushError(textDocument, error, 'sample', diagnosticMap);
+                pushDiagnostic(vscode_languageserver_1.DiagnosticSeverity.Error, textDocument, error, 'sample', diagnosticMap);
             }
         }
         catch (error) {
