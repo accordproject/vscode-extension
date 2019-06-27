@@ -39,6 +39,6 @@
 		"pretest": "npm run lint",
 		"tslint": "tslint",
 		"lint": "npm run tslint 'src/**/*.ts' './test/server.spec.ts'",
-		"test": "nyc ./node_modules/.bin/mocha --compilers ts:ts-node/register ./test/*.spec.ts"
+		"test": "nyc ./node_modules/.bin/mocha --require ts-node/register ./test/*.spec.ts"
 	}
 }
