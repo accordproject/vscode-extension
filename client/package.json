@@ -108,14 +108,17 @@
 	},
 	"license-check-and-add-config": {
 		"folder": ".",
-		"license": "LICENSE",
+		"license": "HEADER",
 		"exact_paths_method": "EXCLUDE",
 		"exact_paths": [
 			"node_modules",
 			"out",
 			"server",
 			".vscode-test",
-			"coverage"
+			"coverage",
+			"LICENSE",
+			"HEADER",
+			"README.md"
 		],
 		"file_type_method": "EXCLUDE",
 		"file_types": [
