@@ -339,6 +339,8 @@ function validateModels(textDocument, diagnosticMap, templateCache) {
                 }
                 catch (err) {
                     // we may be offline?
+                    // Try to validate without external models
+                    modelManager.validateModelFiles();
                     pushDiagnostic(vscode_languageserver_1.DiagnosticSeverity.Warning, textDocument, err, 'model', diagnosticMap);
                 }
                 return true;

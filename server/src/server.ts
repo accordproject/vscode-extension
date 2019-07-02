@@ -384,6 +384,8 @@ async function validateModels(textDocument: TextDocument, diagnosticMap, templat
             }
             catch(err) {
                 // we may be offline?
+                // Try to validate without external models
+                modelManager.validateModelFiles();
                 pushDiagnostic(DiagnosticSeverity.Warning, textDocument, err, 'model', diagnosticMap);
             }
             return true;
