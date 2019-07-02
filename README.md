@@ -11,11 +11,11 @@ Validates that Cicero templates conform to the [Accord Project Template Specific
 ## For Template Authors
 
 If you want to use this plugin:
-1. Remove any existing versions of the Ergo extension and the Hyperledger Composer extension
-2. Download and install VSCode from https://code.visualstudio.com/download
+1. Download and install VSCode from https://code.visualstudio.com/download
+2. Remove any existing versions of the Ergo extension and the Hyperledger Composer extension
 3. From the extensions view in VSCode, search for "Accord Project", click the `Install` button to install it
 
-The extension is available from the Visual Studio Marketplace at https://marketplace.visualstudio.com/items?itemName=accordproject.accordproject-vscode-plugin
+The extension is available from the Visual Studio Marketplace at https://marketplace.visualstudio.com/items?itemName=accordproject.cicero-vscode-extension
 
 ## For Contributors
 
@@ -38,7 +38,7 @@ npm run package:vsix
 3. Press the ... and select "Install from VSIX"
 4. Browse to the VSIX file
 5. Install and restart VSCode
-6. Open a .cto file
+6. Open a .cto or .ergo file
 
 ### Travis CI build
 Developers no longer need a manual build, once you have created a pull request from your private Github repository. The build will be automatically performed by Travis.
