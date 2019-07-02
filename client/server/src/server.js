@@ -102,29 +102,6 @@ function getRange(error) {
             end: { line: error.fileLocation.end.line - 1, character: error.fileLocation.end.column }
         };
     }
-    else if (error.descriptor) {
-        if (error.descriptor.kind === 'CompilationError' || error.descriptor.kind === 'TypeError') {
-            if (error.descriptor.locstart.line > 0) {
-                const startRange = { line: error.descriptor.locstart.line - 1, character: error.descriptor.locstart.character };
-                return {
-                    start: startRange,
-                    end: startRange
-                };
-            }
-            if (error.descriptor.locend.line > 0) {
-                return {
-                    start: { line: 0, character: 0 },
-                    end: { line: error.descriptor.locend.line - 1, character: error.descriptor.locend.character }
-                };
-            }
-        }
-        else {
-            return {
-                start: { line: error.descriptor.locstart.line - 1, character: error.descriptor.locstart.character },
-                end: { line: error.descriptor.locend.line - 1, character: error.descriptor.locend.character },
-            };
-        }
-    }
     return FULL_RANGE;
 }
 /**
@@ -138,20 +115,6 @@ function getRange(error) {
 function pushDiagnostic(severity, textDocument, error, type, diagnosticMap) {
     connection.console.log(util.inspect(error, false, null));
     let fileName = error.fileName;
-    // hack to extract the filename from the verbose message
-    if (!fileName && error.descriptor && error.descriptor.verbose) {
-        const regex = /.+at file (.+\.ergo).+/gm;
-        const match = regex.exec(error.descriptor.verbose);
-        connection.console.log(`Match: ${match}`);
-        if (match && match.length > 0) {
-            fileName = match[1];
-            connection.console.log(`fileName: ${fileName}`);
-        }
-    }
-    // hack to extract the filename from the model file
-    if (!fileName && error.getModelFile && error.getModelFile()) {
-        fileName = error.getModelFile().getName();
-    }
     let diagnostic = {
         severity,
         range: getRange(error),
@@ -224,8 +187,8 @@ documents.onDidChangeContent((change) => __awaiter(this, void 0, void 0, functio
     documents.all().forEach(validateTextDocument);
 }));
 /**
- * A cache of TemplateLogic/template instances. The keys are the root folder names.
- * Values have a templateLogic and a template property
+ * A cache of LogicManager/template instances. The keys are the root folder names.
+ * Values have a logicManager and a template property
  */
 const templateCache = {};
 /**
@@ -301,16 +264,16 @@ function compileErgoFiles(textDocument, diagnosticMap, templateCache) {
             }
             try {
                 // get the template logic from cache
-                let templateLogic = templateCache[parentDir].templateLogic;
+                let logicManager = templateCache[parentDir].logicManager;
                 connection.console.log(`Compiling ergo files under: ${parentDir}`);
                 // Find all ergo files in ./ relative to this file
                 const ergoFiles = glob_1.glob.sync(`{${folder},${parentDir}/lib/}**/*.ergo`);
                 for (const file of ergoFiles) {
                     clearErrors(file, 'logic', diagnosticMap);
                     const contents = getEditedFileContents(file);
-                    templateLogic.updateLogic(contents, file);
+                    logicManager.updateLogic(contents, file);
                 }
-                yield templateLogic.compileLogic(true);
+                yield logicManager.compileLogic(true);
                 return true;
             }
             catch (error) {
@@ -342,18 +305,18 @@ function validateModels(textDocument, diagnosticMap, templateCache) {
             connection.console.log(`Validating model files under: ${parentDir}`);
             // get the template logic from cache
             let templateCacheEntry = templateCache[parentDir];
-            let templateLogic = null;
+            let logicManager = null;
             if (!templateCacheEntry) {
-                templateLogic = new ergo_compiler_1.TemplateLogic('cicero');
+                logicManager = new ergo_compiler_1.LogicManager('cicero');
                 templateCache[parentDir] = {
-                    templateLogic,
+                    logicManager,
                     template: null
                 };
             }
             else {
-                templateLogic = templateCacheEntry.templateLogic;
+                logicManager = templateCacheEntry.logicManager;
             }
-            const modelManager = templateLogic.getModelManager();
+            const modelManager = logicManager.getModelManager();
             modelManager.clearModelFiles();
             // Find all cto files in ./ relative to this file or in the parent directory if this is a Cicero template.
             const modelFiles = glob_1.glob.sync(`{${folder},${parentDir}/models/}**/*.cto`);

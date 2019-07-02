@@ -1,7 +1,7 @@
 {
 	"name": "accordproject-vscode-server",
 	"description": "A language server example demoing servers per workspace folder",
-	"version": "0.8.0",
+	"version": "0.9.0",
 	"license": "Apache-2.0",
 	"engines": {
 		"node": "*"
@@ -11,9 +11,11 @@
 		"url": "https://github.com/Microsoft/vscode-extension-samples"
 	},
 	"dependencies": {
-		"@accordproject/cicero-core": "^0.12.4",
-		"@accordproject/ergo-compiler": "0.8.5",
-		"composer-concerto": "0.71.2",
+		"@accordproject/cicero-core": "^0.13.0",
+		"@accordproject/ergo-compiler": "0.9.0",
+		"acorn": "5.1.2",
+		"composer-concerto": "0.71.3",
+		"doctrine": "3.0.0",
 		"fast-safe-stringify": "2.0.6",
 		"glob": "^7.1.4",
 		"vscode-languageserver": "^4.3.0",
@@ -39,6 +41,6 @@
 		"pretest": "npm run lint",
 		"tslint": "tslint",
 		"lint": "npm run tslint 'src/**/*.ts' './test/server.spec.ts'",
-		"test": "nyc ./node_modules/.bin/mocha --compilers ts:ts-node/register ./test/*.spec.ts"
+		"test": "nyc ./node_modules/.bin/mocha --require ts-node/register ./test/*.spec.ts"
 	}
 }
