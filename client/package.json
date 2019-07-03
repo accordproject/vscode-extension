@@ -4,7 +4,7 @@
 	"description": "Accord Project extension for Visual Studio Code, providing tools for template development.",
 	"author": "Clause",
 	"license": "Apache-2.0",
-	"version": "0.8.0",
+	"version": "0.9.0",
 	"publisher": "accordproject",
 	"icon": "icon.png",
 	"repository": {
@@ -108,14 +108,17 @@
 	},
 	"license-check-and-add-config": {
 		"folder": ".",
-		"license": "LICENSE.txt",
+		"license": "HEADER",
 		"exact_paths_method": "EXCLUDE",
 		"exact_paths": [
 			"node_modules",
 			"out",
 			"server",
 			".vscode-test",
-			"coverage"
+			"coverage",
+			"LICENSE",
+			"HEADER",
+			"README.md"
 		],
 		"file_type_method": "EXCLUDE",
 		"file_types": [
@@ -137,9 +140,6 @@
 				"eachLine": {
 					"prepend": "# "
 				}
-			},
-			"md": {
-				"file": "../markdown-license.txt"
 			}
 		}
 	}

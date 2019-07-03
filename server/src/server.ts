@@ -25,7 +25,7 @@ import * as path from 'path';
 import fileUriToPath from './fileUriToPath';
 
 import { Template, Clause } from '@accordproject/cicero-core';
-import { TemplateLogic } from '@accordproject/ergo-compiler';
+import { LogicManager } from '@accordproject/ergo-compiler';
 import { ModelFile } from 'composer-concerto';
 
 const util = require('util');
@@ -115,29 +115,6 @@ function getRange(error: any) {
             end: { line: error.fileLocation.end.line-1, character: error.fileLocation.end.column }
         };
     }
-    else if(error.descriptor) {
-        if(error.descriptor.kind === 'CompilationError' || error.descriptor.kind === 'TypeError') {
-            if(error.descriptor.locstart.line > 0) {
-                const startRange = { line: error.descriptor.locstart.line-1, character: error.descriptor.locstart.character };
-                return {
-                    start: startRange,
-                    end: startRange
-                }
-            }
-            if(error.descriptor.locend.line > 0) {
-                return {
-                    start: { line: 0, character: 0 },
-                    end: { line: error.descriptor.locend.line-1, character: error.descriptor.locend.character }
-                }
-            }
-        }
-        else {
-            return {
-                start: { line: error.descriptor.locstart.line-1, character: error.descriptor.locstart.character },
-                end:  { line: error.descriptor.locend.line-1, character: error.descriptor.locend.character },
-            }
-        }
-    }
     
     return FULL_RANGE;
 }
@@ -155,22 +132,6 @@ function pushDiagnostic(severity, textDocument: TextDocument, error : any, type 
     connection.console.log(util.inspect(error, false, null))
 
     let fileName = error.fileName;
-
-    // hack to extract the filename from the verbose message
-    if(!fileName && error.descriptor && error.descriptor.verbose) {
-        const regex = /.+at file (.+\.ergo).+/gm;
-        const match = regex.exec(error.descriptor.verbose);
-        connection.console.log(`Match: ${match}`);
-        if(match && match.length > 0) {
-            fileName = match[1];
-            connection.console.log(`fileName: ${fileName}`);
-        }
-    }
-
-    // hack to extract the filename from the model file
-    if(!fileName && error.getModelFile && error.getModelFile()) {
-        fileName = error.getModelFile().getName();
-    }
 
     let diagnostic: Diagnostic = {
         severity,
@@ -255,8 +216,8 @@ documents.onDidChangeContent(async (change) => {
 });
 
 /**
- * A cache of TemplateLogic/template instances. The keys are the root folder names.
- * Values have a templateLogic and a template property
+ * A cache of LogicManager/template instances. The keys are the root folder names.
+ * Values have a logicManager and a template property
  */
 const templateCache = {};
 
@@ -342,7 +303,7 @@ async function compileErgoFiles(textDocument: TextDocument, diagnosticMap, templ
 
         try {
             // get the template logic from cache
-            let templateLogic = templateCache[parentDir].templateLogic;
+            let logicManager = templateCache[parentDir].logicManager;
             connection.console.log(`Compiling ergo files under: ${parentDir}`);
     
             // Find all ergo files in ./ relative to this file
@@ -350,9 +311,9 @@ async function compileErgoFiles(textDocument: TextDocument, diagnosticMap, templ
             for (const file of ergoFiles) {
                 clearErrors(file, 'logic', diagnosticMap);
                 const contents = getEditedFileContents(file);
-                templateLogic.updateLogic(contents, file);
+                logicManager.updateLogic(contents, file);
             }
-            await templateLogic.compileLogic(true);
+            await logicManager.compileLogic(true);
             return true;
         } catch (error) {
             pushDiagnostic(DiagnosticSeverity.Error, textDocument, error, 'logic', diagnosticMap);
@@ -385,20 +346,20 @@ async function validateModels(textDocument: TextDocument, diagnosticMap, templat
 
         // get the template logic from cache
         let templateCacheEntry = templateCache[parentDir];
-        let templateLogic = null;
+        let logicManager = null;
 
         if(!templateCacheEntry) {
-            templateLogic = new TemplateLogic('cicero');
+            logicManager = new LogicManager('cicero');
             templateCache[parentDir] = {
-                templateLogic,
+                logicManager,
                 template: null
             }
         }
         else {
-            templateLogic = templateCacheEntry.templateLogic;
+            logicManager = templateCacheEntry.logicManager;
         }
         
-        const modelManager = templateLogic.getModelManager();
+        const modelManager = logicManager.getModelManager();
         modelManager.clearModelFiles();
     
         // Find all cto files in ./ relative to this file or in the parent directory if this is a Cicero template.
@@ -423,6 +384,8 @@ async function validateModels(textDocument: TextDocument, diagnosticMap, templat
             }
             catch(err) {
                 // we may be offline?
+                // Try to validate without external models
+                modelManager.validateModelFiles();
                 pushDiagnostic(DiagnosticSeverity.Warning, textDocument, err, 'model', diagnosticMap);
             }
             return true;
