@@ -103,7 +103,7 @@ function getEditedFileContents(file) {
 }
 
 /**
- * Lots of hacks to extract line numbers from exceptions
+ * Extract line numbers from exceptions
  * 
  * @param error the exception
  * @returns the range object
@@ -244,32 +244,28 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
         // this will assemble all the models into a ModelManager
         // and validate - so it needs to always run before we do anything else
         const modelValid = await validateModels(textDocument, diagnosticMap, templateCache);
+        let ergoValid = true;
     
         // if the model is valid, then we proceed
         if(modelValid) {
             switch(fileExtension) {
                 case '.cto':
-                        // if a cto file has been modified then we check all ergo files and the template
-                        const ergoValid = await compileErgoFiles(textDocument, diagnosticMap, templateCache);
-    
-                        // if ergo is valid we proceed to check the template
-                        if(ergoValid) {
-                            await validateTemplateFile(textDocument, diagnosticMap, templateCache);
-                        }
-                    break;
                 case '.ergo':
-                    // if ergo code has changed, we recompile all ergo
-                    await compileErgoFiles(textDocument, diagnosticMap, templateCache);
+                    // if a cto or ergo file has been modified then we compile all ergo files
+                    ergoValid = await compileErgoFiles(textDocument, diagnosticMap, templateCache);    
                     break;
                 case '.tem':
-                    // if a template file has changed, we check we can build the template
-                    await validateTemplateFile(textDocument, diagnosticMap, templateCache);
                     break;
                 case '.txt':
                     // if a txt file has changed we try to parse it
                     await parseSampleFile(textDocument, diagnosticMap, templateCache);
                     break;
             }
+
+            // if ergo is valid we proceed to check we can build the template
+            if(ergoValid) {
+                await validateTemplateFile(textDocument, diagnosticMap, templateCache);
+            }            
         }
     
         // send all the diagnostics we have accumulated back to the client
@@ -383,8 +379,7 @@ async function validateModels(textDocument: TextDocument, diagnosticMap, templat
                 await modelManager.updateExternalModels();
             }
             catch(err) {
-                // we may be offline?
-                // Try to validate without external models
+                // we may be offline? Validate without external models
                 modelManager.validateModelFiles();
                 pushDiagnostic(DiagnosticSeverity.Warning, textDocument, err, 'model', diagnosticMap);
             }
@@ -405,7 +400,7 @@ async function validateModels(textDocument: TextDocument, diagnosticMap, templat
 /**
  * Validate that we can build the template archive
  * 
- * @param textDocument - a TextDocument
+ * @param textDocument - a TextDocument. WARNING, this may not be the .tem file!
  * @return Promise<boolean> true the template is valid
  */
 async function validateTemplateFile(textDocument: TextDocument, diagnosticMap, templateCache): Promise<boolean> {
@@ -421,13 +416,15 @@ async function validateTemplateFile(textDocument: TextDocument, diagnosticMap, t
             connection.console.log(`Validating template under: ${parentDir}`);
             clearErrors(parentDir + '/grammar/template.tem', 'template', diagnosticMap);
             const template = await Template.fromDirectory(parentDir);
-            template.parserManager.buildGrammar(textDocument.getText());
+            const grammar = getEditedFileContents(parentDir + '/grammar/template.tem');
+            template.parserManager.buildGrammar(grammar);
             template.validate();
             templateCache[parentDir].template = template;
             connection.console.log(`==> saved template: ${template.getIdentifier()}`);
             return true;
         }
         catch(error) {
+            templateCache[parentDir].template = null;
             error.fileName = parentDir + '/grammar/template.tem';
             pushDiagnostic(DiagnosticSeverity.Error, textDocument, error, 'template', diagnosticMap);
         }
