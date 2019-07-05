@@ -24,8 +24,8 @@ The extension is available from the Visual Studio Marketplace at https://marketp
 Generate the installable VSIX file:
 
 ```
-git clone https://github.com/accordproject/ergo-vscode-plugin.git
-cd ergo-vscode-plugin/server
+git clone https://github.com/accordproject/cicero-vscode-extension.git
+cd cicero-vscode-extension/server
 npm install
 npm run compile:server
 cd ../client
@@ -47,7 +47,7 @@ The public release version number is defined in the Client package.json file.
 
 #### Publish Release
 Below are steps for publishing a release.
-1. Go to https://github.com/accordproject/cicero-vscode-plugin
+1. Go to https://github.com/accordproject/cicero-vscode-extension
 2. Click Releases tab
 3. Click Draft a new release on the right
 4. Type a Tag version in the Tag version field. e.g. v0.5.7.1
