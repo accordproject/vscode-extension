@@ -1,4 +1,13 @@
-# Accord Project Extension for VSCode
+<h1 align="center">
+  Accord Project Extension for VSCode
+</h1>
+
+<p align="center">
+  <a href="https://travis-ci.org/accordproject/cicero-vscode-extension"><img src="https://travis-ci.org/accordproject/cicero-vscode-extension.svg?branch=master" alt="Build Status"></a>
+  <a href="https://github.com/accordproject/cicero-vscode-extension/blob/master/LICENSE"><img src="https://img.shields.io/github/license/accordproject/cicero-vscode-extension" alt="GitHub license"></a>
+  <a href="https://accord-project-slack-signup.herokuapp.com/"><img src="https://img.shields.io/badge/Slack-Join%20Slack-blue" alt="slack"></a>
+  <br>
+</p>
 
 Validates that Cicero templates conform to the [Accord Project Template Specification](https://docs.accordproject.org):
 
