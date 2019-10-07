@@ -69,7 +69,7 @@ Below are steps for publishing a release.
 5. Click Install button to install it
 6. Update button will be shown if you have already installed the same plugin before.
 
-## Acknowledgements
+## Acknowledgments
 
 Thanks to our friends at Hyperledger Composer for inspiring us with their existing plugin, 
 https://github.com/hyperledger/composer-vscode-plugin/
