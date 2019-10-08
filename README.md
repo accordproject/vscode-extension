@@ -22,7 +22,7 @@ Validates that Cicero templates conform to the [Accord Project Template Specific
 If you want to use this plugin:
 1. Download and install VSCode from https://code.visualstudio.com/download
 2. Remove any existing versions of the Ergo extension and the Hyperledger Composer extension
-3. From the extensions view in VSCode, search for "Accord Project", click the `Install` button to install it
+3. From the extensions view(in the left sidebar which consist files and debug option) in VSCode, search for "Accord Project", click the `Install` button to install it
 
 The extension is available from the Visual Studio Marketplace at https://marketplace.visualstudio.com/items?itemName=accordproject.cicero-vscode-extension
 
