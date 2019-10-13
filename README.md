@@ -55,15 +55,15 @@ A successful build will create an installable VSIX file on the build machine.
 The public release version number is defined in the Client package.json file. 
 
 #### Publish Release
-Below are steps for publishing a release.
+Below are the steps for publishing a release.
 1. Go to https://github.com/accordproject/cicero-vscode-extension
-2. Click Releases tab
+2. Click the Releases tab
 3. Click Draft a new release on the right
 4. Type a Tag version in the Tag version field. e.g. v0.5.7.1
 5. Type a Release title in the Release title field e.g v0.5.7.1
 6. Provide a short description of this release under the Write tab
 7. Uncheck the box for This is a pre-release at the end of this page
-8. Click Publish release button to publish the VSIX file to the VSCode Marketplace
+8. Click the Publish release button to publish the VSIX file to the VSCode Marketplace
 
 #### Check the published release
 1. Go to the VSCode Marketplace: https://marketplace.visualstudio.com/
@@ -75,8 +75,8 @@ Below are steps for publishing a release.
 2. Open the Extensions by View-->Extensions or Ctrl(cmd)+Shift+x 
 3. Search for Accord Project
 4. The new published Accord Project plugin is showing on the list
-5. Click Install button to install it
-6. Update button will be shown if you have already installed the same plugin before.
+5. Click the Install button to install it
+6. The Update button will be shown if you have already installed the same plugin before.
 
 ## Acknowledgments
 
