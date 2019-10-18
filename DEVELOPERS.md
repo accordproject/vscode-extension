@@ -58,7 +58,7 @@ To ensure consistency throughout the source code, keep these rules in mind as yo
 
 We have very precise rules over how our git commit messages can be formatted.  This leads to **more
 readable messages** that are easy to follow when looking through the **project history** and **git logs**.  
-But also, we use the git commit messages to **generate the Concerto-UI change log**.
+But also, we use the git commit messages to **generate the Cicero VSCode Extension change log**.
 
 The commit message formatting can be added using a version of typical git workflow.
 
@@ -105,7 +105,7 @@ The subject contains succinct description of the change:
 * no dot (.) at the end
 
 ### Footer
-The footer should contain [reference GitHub Issues that this commit addresses][github-issues].
+The footer should contain [reference GitHub Issues][github-issues] that this commit addresses.
 
 ## <a name="pullrequests"></a> GitHub Pull Request Guidelines
 Pull Requests should consist of a complete addition to the code which contains value. 
@@ -137,14 +137,14 @@ When approved and ready to merge, a Pull Request should be squashed down to a si
 
 ## <a name="documentation"></a> Writing Documentation
 
-The Concerto-UI project uses [jsdoc][jsdoc] for all of its code
+The Cicero VSCode Extension project uses [jsdoc][jsdoc] for all of its code
 documentation.
 
 This means that all the docs are stored inline in the source code and so are kept in sync as it
 changes.
 
 This means that since we generate the documentation from the source code, we can easily provide
-version-specific documentation by simply checking out a version of Concerto-UI and running the build.
+version-specific documentation by simply checking out a version of Cicero VSCode Extension and running the build.
 
 ## License <a name="license"></a>
 
@@ -163,13 +163,13 @@ Accord Project documentation files are made available under the [Creative Common
 [node]: https://nodejs.org/en/
 [nvm]: https://github.com/creationix/nvm
 [nvm-windows]: https://github.com/coreybutler/nvm-windows
-[github]: https://github.com/accordproject/concerto-ui
+[github]: https://github.com/accordproject/cicero-vscode-extension
 [github-signup]: https://github.com/signup/free
-[github-issues]: https://github.com/accordproject/concerto-ui/issues
+[github-issues]: https://github.com/accordproject/cicero-vscode-extension/issues
 [github-forking]: http://help.github.com/forking
 [google]: https://google.github.io/styleguide/jsguide.html
 [commit]: https://github.com/commitizen/cz-cli
 [jsdoc]: http://usejsdoc.org/
 
-[apache]: https://github.com/accordproject/concerto-ui/blob/master/LICENSE
+[apache]: https://github.com/accordproject/cicero-vscode-extension/blob/master/LICENSE
 [creativecommons]: http://creativecommons.org/licenses/by/4.0/

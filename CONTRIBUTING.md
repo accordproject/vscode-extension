@@ -1,6 +1,6 @@
 # Contributing to Cicero VSCode Extension
 
-> Thanks to the angularJS team for the bulk of this text!
+> Thanks to the AngularJS team for the bulk of this text!
 
 We'd love for you to contribute to our source code and to make Cicero VSCode Extension even better than it is today! Here are the guidelines we'd like you to follow:
 
@@ -37,13 +37,13 @@ Other channels for support are:
 
 ### <a name="issue"></a> Found an Issue or Bug?
 
-If you find a bug in the source code, you can help us by submitting an issue to our [GitHub Repository][github-issues]. Even better, you can submit a Pull Request with a fix.
+If you find a bug in the source code, you can help us by submitting an issue to our [GitHub Repository][github]. Even better, you can submit a Pull Request with a fix.
 
-**Please see the **[**Submission Guidelines**][contribute.submit]** below.**
+**Please see the [Submission Guidelines][contribute.submit] below.**
 
 ### <a name="feature"></a> Missing a Feature?
 
-You can request a new feature by submitting an issue to our [GitHub Repository][github-issues].
+You can request a new feature by [submitting an issue][github-issues] to our GitHub Repository.
 
 If you would like to implement a new feature then consider what kind of change it is:
 
@@ -55,7 +55,7 @@ If you would like to implement a new feature then consider what kind of change i
 
   as a Pull Request. See the section about [Pull Request Submission Guidelines][contribute.submitpr], and
 
-  for detailed information the [core development documentation][developers].
+  for detailed information read the [core development documentation][developers].
 
 ### <a name="docs"></a> Want a Doc Fix?
 
