@@ -11,7 +11,7 @@
 		"url": "https://github.com/Microsoft/vscode-extension-samples"
 	},
 	"dependencies": {
-		"@accordproject/cicero-core": "^0.13.4",
+		"@accordproject/cicero-core": "^0.13.5",
 		"@accordproject/ergo-compiler": "0.9.4",
 		"acorn": "5.1.2",
 		"composer-concerto": "0.71.3",
@@ -23,16 +23,16 @@
 	},
 	"devDependencies": {
 		"@types/mocha": "^5.2.7",
-		"@types/node": "^12.0.10",
+		"@types/node": "^12.11.1",
 		"chai": "^4.2.0",
 		"license-check-and-add": "^2.3.6",
-		"mocha": "^6.1.4",
+		"mocha": "^6.2.1",
 		"nyc": "^14.1.1",
-		"source-map-support": "^0.5.12",
-		"ts-node": "^8.3.0",
-		"tslint": "^5.18.0",
+		"source-map-support": "^0.5.13",
+		"ts-node": "^8.4.1",
+		"tslint": "^5.20.0",
 		"tslint-loader": "^3.5.4",
-		"typescript": "^3.5.2"
+		"typescript": "^3.6.4"
 	},
 	"scripts": {
 		"install:server": "installServerIntoExtension ../client ./package.json ./tsconfig.json",
