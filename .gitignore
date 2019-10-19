@@ -4,3 +4,7 @@ node_modules
 client/.vscode-test/**
 client/out/
 .nyc_output/
+
+
+# windows junk
+thumbs.db
