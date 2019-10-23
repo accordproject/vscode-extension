@@ -131,7 +131,7 @@
 		"license_formats": {
 			"ts|cto|js|ergo": {
 				"prepend": "/*",
-				"append": "*/",
+				"append": " */",
 				"eachLine": {
 					"prepend": " * "
 				}
