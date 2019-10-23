@@ -26,7 +26,7 @@ import fileUriToPath from './fileUriToPath';
 
 import { Template, Clause } from '@accordproject/cicero-core';
 import { LogicManager } from '@accordproject/ergo-compiler';
-import { ModelFile } from 'composer-concerto';
+import { ModelFile } from '@accordproject/concerto-core';
 
 const util = require('util');
 
@@ -254,9 +254,9 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
                     // if a cto or ergo file has been modified then we compile all ergo files
                     ergoValid = await compileErgoFiles(textDocument, diagnosticMap, templateCache);    
                     break;
-                case '.tem':
+                case '.tem.md':
                     break;
-                case '.txt':
+                case '.md':
                     // if a txt file has changed we try to parse it
                     await parseSampleFile(textDocument, diagnosticMap, templateCache);
                     break;
@@ -303,7 +303,7 @@ async function compileErgoFiles(textDocument: TextDocument, diagnosticMap, templ
             connection.console.log(`Compiling ergo files under: ${parentDir}`);
     
             // Find all ergo files in ./ relative to this file
-            const ergoFiles = glob.sync(`{${folder},${parentDir}/lib/}**/*.ergo`);
+            const ergoFiles = glob.sync(`{${folder},${parentDir}/logic/}**/*.ergo`);
             for (const file of ergoFiles) {
                 clearErrors(file, 'logic', diagnosticMap);
                 const contents = getEditedFileContents(file);
@@ -359,7 +359,7 @@ async function validateModels(textDocument: TextDocument, diagnosticMap, templat
         modelManager.clearModelFiles();
     
         // Find all cto files in ./ relative to this file or in the parent directory if this is a Cicero template.
-        const modelFiles = glob.sync(`{${folder},${parentDir}/models/}**/*.cto`);
+        const modelFiles = glob.sync(`{${folder},${parentDir}/model/}**/*.cto`);
 
         // validate the model files
         try {
@@ -414,9 +414,9 @@ async function validateTemplateFile(textDocument: TextDocument, diagnosticMap, t
 
         try {
             connection.console.log(`Validating template under: ${parentDir}`);
-            clearErrors(parentDir + '/grammar/template.tem', 'template', diagnosticMap);
+            clearErrors(parentDir + '/grammar/template.tem.md', 'template', diagnosticMap);
             const template = await Template.fromDirectory(parentDir);
-            const grammar = getEditedFileContents(parentDir + '/grammar/template.tem');
+            const grammar = getEditedFileContents(parentDir + '/grammar/template.tem.md');
             template.parserManager.buildGrammar(grammar);
             template.validate();
             templateCache[parentDir].template = template;
@@ -425,7 +425,7 @@ async function validateTemplateFile(textDocument: TextDocument, diagnosticMap, t
         }
         catch(error) {
             templateCache[parentDir].template = null;
-            error.fileName = parentDir + '/grammar/template.tem';
+            error.fileName = parentDir + '/grammar/template.tem.md';
             pushDiagnostic(DiagnosticSeverity.Error, textDocument, error, 'template', diagnosticMap);
         }
     }

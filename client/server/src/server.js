@@ -29,7 +29,7 @@ const path = require("path");
 const fileUriToPath_1 = require("./fileUriToPath");
 const cicero_core_1 = require("@accordproject/cicero-core");
 const ergo_compiler_1 = require("@accordproject/ergo-compiler");
-const composer_concerto_1 = require("composer-concerto");
+const concerto_core_1 = require("@accordproject/concerto-core");
 const util = require('util');
 // Creates the LSP connection
 let connection = vscode_languageserver_1.createConnection(vscode_languageserver_1.ProposedFeatures.all);
@@ -114,7 +114,7 @@ function getRange(error) {
  * @param type the type of the exception
  */
 function pushDiagnostic(severity, textDocument, error, type, diagnosticMap) {
-    // connection.console.log(util.inspect(error, false, null));
+    connection.console.log(util.inspect(error, false, null));
     let fileName = error.fileName;
     let diagnostic = {
         severity,
@@ -220,9 +220,9 @@ function validateTextDocument(textDocument) {
                         // if a cto or ergo file has been modified then we compile all ergo files
                         ergoValid = yield compileErgoFiles(textDocument, diagnosticMap, templateCache);
                         break;
-                    case '.tem':
+                    case '.tem.md':
                         break;
-                    case '.txt':
+                    case '.md':
                         // if a txt file has changed we try to parse it
                         yield parseSampleFile(textDocument, diagnosticMap, templateCache);
                         break;
@@ -264,7 +264,7 @@ function compileErgoFiles(textDocument, diagnosticMap, templateCache) {
                 let logicManager = templateCache[parentDir].logicManager;
                 connection.console.log(`Compiling ergo files under: ${parentDir}`);
                 // Find all ergo files in ./ relative to this file
-                const ergoFiles = glob_1.glob.sync(`{${folder},${parentDir}/lib/}**/*.ergo`);
+                const ergoFiles = glob_1.glob.sync(`{${folder},${parentDir}/logic/}**/*.ergo`);
                 for (const file of ergoFiles) {
                     clearErrors(file, 'logic', diagnosticMap);
                     const contents = getEditedFileContents(file);
@@ -316,13 +316,13 @@ function validateModels(textDocument, diagnosticMap, templateCache) {
             const modelManager = logicManager.getModelManager();
             modelManager.clearModelFiles();
             // Find all cto files in ./ relative to this file or in the parent directory if this is a Cicero template.
-            const modelFiles = glob_1.glob.sync(`{${folder},${parentDir}/models/}**/*.cto`);
+            const modelFiles = glob_1.glob.sync(`{${folder},${parentDir}/model/}**/*.cto`);
             // validate the model files
             try {
                 for (const file of modelFiles) {
                     clearErrors(file, 'model', diagnosticMap);
                     const contents = getEditedFileContents(file);
-                    const modelFile = new composer_concerto_1.ModelFile(modelManager, contents, file);
+                    const modelFile = new concerto_core_1.ModelFile(modelManager, contents, file);
                     if (!modelManager.getModelFile(modelFile.getNamespace())) {
                         modelManager.addModelFile(contents, file, true);
                     }
@@ -368,9 +368,9 @@ function validateTemplateFile(textDocument, diagnosticMap, templateCache) {
             }
             try {
                 connection.console.log(`Validating template under: ${parentDir}`);
-                clearErrors(parentDir + '/grammar/template.tem', 'template', diagnosticMap);
+                clearErrors(parentDir + '/grammar/template.tem.md', 'template', diagnosticMap);
                 const template = yield cicero_core_1.Template.fromDirectory(parentDir);
-                const grammar = getEditedFileContents(parentDir + '/grammar/template.tem');
+                const grammar = getEditedFileContents(parentDir + '/grammar/template.tem.md');
                 template.parserManager.buildGrammar(grammar);
                 template.validate();
                 templateCache[parentDir].template = template;
@@ -379,7 +379,7 @@ function validateTemplateFile(textDocument, diagnosticMap, templateCache) {
             }
             catch (error) {
                 templateCache[parentDir].template = null;
-                error.fileName = parentDir + '/grammar/template.tem';
+                error.fileName = parentDir + '/grammar/template.tem.md';
                 pushDiagnostic(vscode_languageserver_1.DiagnosticSeverity.Error, textDocument, error, 'template', diagnosticMap);
             }
         }

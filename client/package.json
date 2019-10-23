@@ -4,7 +4,7 @@
 	"description": "Accord Project extension for Visual Studio Code, providing tools for template development.",
 	"author": "Clause",
 	"license": "Apache-2.0",
-	"version": "0.13.1",
+	"version": "0.20.0-beta.1",
 	"publisher": "accordproject",
 	"icon": "icon.png",
 	"repository": {
@@ -12,7 +12,7 @@
 		"url": "https://github.com/accordproject/cicero-vscode-extension"
 	},
 	"engines": {
-		"vscode": "^1.23.0"
+		"vscode": "^1.25.0"
 	},
 	"scripts": {
 		"compile:client": "tsc -p ./",
@@ -72,7 +72,7 @@
 					"Cicero Template"
 				],
 				"extensions": [
-					".tem"
+					".tem.md"
 				],
 				"configuration": "./ciceroTemplate.language-configuration.json"
 			},

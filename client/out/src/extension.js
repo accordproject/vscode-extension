@@ -36,7 +36,7 @@ function activate(context) {
             { scheme: 'file', language: 'ciceroTemplate' },
             {
                 scheme: 'file', language: 'plaintext',
-                pattern: '**/sample.txt',
+                pattern: '**/sample.md',
             }
         ],
         synchronize: {

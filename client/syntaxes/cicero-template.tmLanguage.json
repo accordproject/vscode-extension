@@ -3,7 +3,7 @@
 	"name": "Cicero Template",
 	"scopeName": "source.cicero-template",
 	"fileTypes": [
-		".tem"
+		".tem.md"
 	],
 	"patterns": [
 		{  
