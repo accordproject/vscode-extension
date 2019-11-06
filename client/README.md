@@ -6,7 +6,7 @@ This VSCode extension:
 
 - parses and type-checks '.ergo' files using the Ergo compiler and reports any errors.
 - parses and validates '.cto' files using the Concerto parser and reports any errors.
-- parses and validates '.tem' files using the Cicero templates parser and reports any errors.
+- parses and validates '.md' and '.tem.md' files using the Cicero templates parser and reports any errors.
 
 This extension is currently in beta so please raise any problems you find as an 
 [issue](https://github.com/accordproject/cicero-vscode-extension/issues).
