@@ -239,8 +239,13 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
         }
 
         const pathStr = path.resolve(fileUriToPath(textDocument.uri));
-        const fileExtension = path.extname(pathStr);
-        
+        let fileExtension = path.extname(pathStr);
+        if (fileExtension === '.md') {
+            if (path.extname(path.basename(pathStr)) === '.tem') {
+                fileExtension = '.tem.md';
+            }
+        }
+
         // this will assemble all the models into a ModelManager
         // and validate - so it needs to always run before we do anything else
         const modelValid = await validateModels(textDocument, diagnosticMap, templateCache);
@@ -257,7 +262,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
                 case '.tem.md':
                     break;
                 case '.md':
-                    // if a txt file has changed we try to parse it
+                    // if a md file has changed we try to parse it
                     await parseSampleFile(textDocument, diagnosticMap, templateCache);
                     break;
             }
@@ -414,18 +419,18 @@ async function validateTemplateFile(textDocument: TextDocument, diagnosticMap, t
 
         try {
             connection.console.log(`Validating template under: ${parentDir}`);
-            clearErrors(parentDir + '/grammar/template.tem.md', 'template', diagnosticMap);
+            clearErrors(parentDir + '/text/grammar.tem.md', 'template', diagnosticMap);
             const template = await Template.fromDirectory(parentDir);
-            const grammar = getEditedFileContents(parentDir + '/grammar/template.tem.md');
+            const grammar = getEditedFileContents(parentDir + '/text/grammar.tem.md');
             template.parserManager.buildGrammar(grammar);
             template.validate();
             templateCache[parentDir].template = template;
-            connection.console.log(`==> saved template: ${template.getIdentifier()}`);
+            connection.console.log(`==> saved grammar: ${template.getIdentifier()}`);
             return true;
         }
         catch(error) {
             templateCache[parentDir].template = null;
-            error.fileName = parentDir + '/grammar/template.tem.md';
+            error.fileName = parentDir + '/text/grammar.tem.md';
             pushDiagnostic(DiagnosticSeverity.Error, textDocument, error, 'template', diagnosticMap);
         }
     }
@@ -438,10 +443,10 @@ async function validateTemplateFile(textDocument: TextDocument, diagnosticMap, t
 }
 
 /**
- * Parse sample.txt
+ * Parse sample.md
  * 
  * @param textDocument - a TextDocument
- * @return Promise<boolean> true the template and sample.txt are valid
+ * @return Promise<boolean> true the template and sample.md are valid
  */
 async function parseSampleFile(textDocument: TextDocument, diagnosticMap, templateCache): Promise<boolean> {
 
@@ -464,7 +469,7 @@ async function parseSampleFile(textDocument: TextDocument, diagnosticMap, templa
         try {
             const clause = new Clause(template);
             clause.parse(textDocument.getText());
-            connection.console.log(`Parsed sample.text: ${JSON.stringify(clause.getData(), null, 2)}`);
+            connection.console.log(`Parsed sample.md: ${JSON.stringify(clause.getData(), null, 2)}`);
             return true;
         }
         catch(error) {

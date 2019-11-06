@@ -14,7 +14,7 @@ Validates that Cicero templates conform to the [Accord Project Template Specific
 - Validates the model for the template ('.cto' files), downloading referenced external models as required
 - Validates the logic of the template ('.ergo' files) 
 - Validates that the template archive can be built
-- Validates that the 'sample.txt' file for the template can be parsed using the template grammar ('.tem' file)
+- Validates that the 'text/sample.md' file for the template can be parsed using the grammar ('text/grammar.tem.md' file)
 - Syntax highlighting for all files
 
 ## For Template Authors

@@ -207,7 +207,12 @@ function validateTextDocument(textDocument) {
              */
             const diagnosticMap = {};
             const pathStr = path.resolve(fileUriToPath_1.default(textDocument.uri));
-            const fileExtension = path.extname(pathStr);
+            let fileExtension = path.extname(pathStr);
+            if (fileExtension === '.md') {
+                if (path.extname(path.basename(pathStr)) === '.tem') {
+                    fileExtension = '.tem.md';
+                }
+            }
             // this will assemble all the models into a ModelManager
             // and validate - so it needs to always run before we do anything else
             const modelValid = yield validateModels(textDocument, diagnosticMap, templateCache);
@@ -223,7 +228,7 @@ function validateTextDocument(textDocument) {
                     case '.tem.md':
                         break;
                     case '.md':
-                        // if a txt file has changed we try to parse it
+                        // if a md file has changed we try to parse it
                         yield parseSampleFile(textDocument, diagnosticMap, templateCache);
                         break;
                 }
@@ -368,18 +373,18 @@ function validateTemplateFile(textDocument, diagnosticMap, templateCache) {
             }
             try {
                 connection.console.log(`Validating template under: ${parentDir}`);
-                clearErrors(parentDir + '/grammar/template.tem.md', 'template', diagnosticMap);
+                clearErrors(parentDir + '/text/grammar.tem.md', 'template', diagnosticMap);
                 const template = yield cicero_core_1.Template.fromDirectory(parentDir);
-                const grammar = getEditedFileContents(parentDir + '/grammar/template.tem.md');
+                const grammar = getEditedFileContents(parentDir + '/text/grammar.tem.md');
                 template.parserManager.buildGrammar(grammar);
                 template.validate();
                 templateCache[parentDir].template = template;
-                connection.console.log(`==> saved template: ${template.getIdentifier()}`);
+                connection.console.log(`==> saved grammar: ${template.getIdentifier()}`);
                 return true;
             }
             catch (error) {
                 templateCache[parentDir].template = null;
-                error.fileName = parentDir + '/grammar/template.tem.md';
+                error.fileName = parentDir + '/text/grammar.tem.md';
                 pushDiagnostic(vscode_languageserver_1.DiagnosticSeverity.Error, textDocument, error, 'template', diagnosticMap);
             }
         }
@@ -391,10 +396,10 @@ function validateTemplateFile(textDocument, diagnosticMap, templateCache) {
     });
 }
 /**
- * Parse sample.txt
+ * Parse sample.md
  *
  * @param textDocument - a TextDocument
- * @return Promise<boolean> true the template and sample.txt are valid
+ * @return Promise<boolean> true the template and sample.md are valid
  */
 function parseSampleFile(textDocument, diagnosticMap, templateCache) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -413,7 +418,7 @@ function parseSampleFile(textDocument, diagnosticMap, templateCache) {
             try {
                 const clause = new cicero_core_1.Clause(template);
                 clause.parse(textDocument.getText());
-                connection.console.log(`Parsed sample.text: ${JSON.stringify(clause.getData(), null, 2)}`);
+                connection.console.log(`Parsed sample.md: ${JSON.stringify(clause.getData(), null, 2)}`);
                 return true;
             }
             catch (error) {

@@ -38,11 +38,8 @@ export function activate(context: ExtensionContext) {
 		documentSelector: [
 			{scheme: 'file', language: 'ergo'}, 
 			{scheme: 'file', language: 'concerto'},
-			{scheme: 'file', language: 'ciceroTemplate'},
-			{
-				scheme: 'file', language: 'plaintext',
-				pattern: '**/sample.md',
-			}
+			{scheme: 'file', language: 'ciceroMark'},
+			{scheme: 'file', language: 'plaintext', pattern: 'text/**/sample*.md'}
 		],
 		synchronize: {
 			// Synchronize the setting section 'languageServerExample' to the server

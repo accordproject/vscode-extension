@@ -1,7 +1,7 @@
 {
 	"name": "accordproject-vscode-server",
-	"description": "A language server example demoing servers per workspace folder",
-	"version": "0.20.0-beta.1",
+	"description": "A language server for Accord Project templates",
+	"version": "0.20.0",
 	"license": "Apache-2.0",
 	"engines": {
 		"node": "*"
@@ -11,9 +11,9 @@
 		"url": "https://github.com/Microsoft/vscode-extension-samples"
 	},
 	"dependencies": {
-		"@accordproject/cicero-core": "0.20.0-beta.1",
-		"@accordproject/concerto-core": "0.82.2",
-		"@accordproject/ergo-compiler": "0.20.0-beta.1",
+		"@accordproject/cicero-core": "0.20.0",
+		"@accordproject/concerto-core": "0.82.4",
+		"@accordproject/ergo-compiler": "0.20.0",
 		"fast-safe-stringify": "2.0.6",
 		"glob": "^7.1.4",
 		"vscode-languageserver": "^4.3.0",
