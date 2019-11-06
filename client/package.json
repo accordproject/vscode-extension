@@ -50,7 +50,7 @@
 		"onLanguage:ergo",
 		"onLanguage:concerto",
 		"onLanguage:ciceroMark",
-		"onLanguage:plaintext"
+		"onLanguage:markdown"
 	],
 	"main": "./out/src/extension",
 	"contributes": {
