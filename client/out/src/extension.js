@@ -10,7 +10,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = require("path");
@@ -33,11 +33,8 @@ function activate(context) {
         documentSelector: [
             { scheme: 'file', language: 'ergo' },
             { scheme: 'file', language: 'concerto' },
-            { scheme: 'file', language: 'ciceroTemplate' },
-            {
-                scheme: 'file', language: 'plaintext',
-                pattern: '**/sample.txt',
-            }
+            { scheme: 'file', language: 'ciceroMark' },
+            { scheme: 'file', language: 'plaintext', pattern: 'text/**/sample*.md' }
         ],
         synchronize: {
             // Synchronize the setting section 'languageServerExample' to the server
