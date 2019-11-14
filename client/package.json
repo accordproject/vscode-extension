@@ -4,7 +4,7 @@
 	"description": "Accord Project extension for Visual Studio Code, providing tools for template development.",
 	"author": "Clause",
 	"license": "Apache-2.0",
-	"version": "0.20.1",
+	"version": "0.20.2",
 	"publisher": "accordproject",
 	"icon": "icon.png",
 	"repository": {
