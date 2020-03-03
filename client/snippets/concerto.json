@@ -1,0 +1,56 @@
+{
+  "Asset": {
+		"prefix": "asset",
+		"body": [
+			"asset ${1:assetName} identified by ${2:assetKey} {",
+			"\to String ${2}$0",
+			"}"
+		],
+		"description": "Concerto Asset"
+	},
+	"Participant": {
+		"prefix": "participant",
+		"body": [
+			"participant ${1:participantName} identified by ${2:participantKey} {",
+			"\to String ${2}$0",
+			"}"
+		],
+		"description": "Concerto Participant"
+	},
+	"Transaction": {
+		"prefix": "transaction",
+		"body": [
+			"transaction ${1:transactionName} {",
+			"\to String ${2:detail}$0",
+			"}"
+		],
+		"description": "Concerto Transaction"
+	},
+  "Event": {
+		"prefix": "event",
+		"body": [
+			"event ${1:eventName} {",
+			"\to String ${2:detail}$0",
+			"}"
+		],
+		"description": "Concerto Event"
+	},
+	"Concept": {
+		"prefix": "concept",
+		"body": [
+			"concept ${1:conceptName} {",
+			"\to String ${1}$0",
+			"}"
+		],
+		"description": "Concerto Concept"
+	},
+	"Enum": {
+		"prefix": "enum",
+		"body": [
+			"enum ${1:enumName} {",
+			"\to ${2:ITEM}$0",
+			"}"
+		],
+		"description": "Concerto Enum"
+	}
+}

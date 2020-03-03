@@ -53,6 +53,10 @@
 		"onLanguage:markdown"
 	],
 	"main": "./out/src/extension",
+	"categories": [
+		"Programming Languages",
+		"Snippets"
+	],
 	"contributes": {
 		"languages": [
 			{
@@ -103,6 +107,12 @@
 				"language": "concerto",
 				"scopeName": "source.concerto",
 				"path": "./syntaxes/concerto.tmLanguage.json"
+			}
+		],
+		"snippets": [
+			{
+				"language": "concerto",
+				"path": "./snippets/concerto.json"
 			}
 		]
 	},
