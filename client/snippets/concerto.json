@@ -1,56 +1,84 @@
 {
   "Asset": {
-		"prefix": "asset",
-		"body": [
-			"asset ${1:assetName} identified by ${2:assetKey} {",
-			"\to String ${2}$0",
-			"}"
-		],
-		"description": "Concerto Asset"
-	},
-	"Participant": {
-		"prefix": "participant",
-		"body": [
-			"participant ${1:participantName} identified by ${2:participantKey} {",
-			"\to String ${2}$0",
-			"}"
-		],
-		"description": "Concerto Participant"
-	},
-	"Transaction": {
-		"prefix": "transaction",
-		"body": [
-			"transaction ${1:transactionName} {",
-			"\to String ${2:detail}$0",
-			"}"
-		],
-		"description": "Concerto Transaction"
-	},
+    "prefix": "asset",
+    "body": [
+      "asset ${1:assetName} identified by ${2:assetKey} {",
+      "\to String ${2}$0",
+      "}"
+    ],
+    "description": "Concerto Assets are class declarations for models"
+  },
+  "Participant": {
+    "prefix": "participant",
+    "body": [
+      "participant ${1:participantName} identified by ${2:participantKey} {",
+      "\to String ${2}$0",
+      "}"
+    ],
+    "description": "Concerto Participants are typically used for the identifiable people or organizations in the model"
+  },
+  "Transaction": {
+    "prefix": "transaction",
+    "body": [
+      "transaction ${1:transactionName} {",
+      "\to String ${2:detail}$0",
+      "}"
+    ],
+    "description": "Concerto Transaction"
+  },
   "Event": {
-		"prefix": "event",
-		"body": [
-			"event ${1:eventName} {",
-			"\to String ${2:detail}$0",
-			"}"
-		],
-		"description": "Concerto Event"
-	},
-	"Concept": {
-		"prefix": "concept",
-		"body": [
-			"concept ${1:conceptName} {",
-			"\to String ${1}$0",
-			"}"
-		],
-		"description": "Concerto Concept"
-	},
-	"Enum": {
-		"prefix": "enum",
-		"body": [
-			"enum ${1:enumName} {",
-			"\to ${2:ITEM}$0",
-			"}"
-		],
-		"description": "Concerto Enum"
-	}
+    "prefix": "event",
+    "body": ["event ${1:eventName} {", "\to String ${2:detail}$0", "}"],
+    "description": "Concerto Event"
+  },
+  "Concept": {
+    "prefix": "concept",
+    "body": ["concept ${1:conceptName} {", "\to String ${1}$0", "}"],
+    "description": "Concerto Concepts are similar to class declarations"
+  },
+  "Enum": {
+    "prefix": "enum",
+    "body": ["enum ${1:enumName} {", "\to ${2:ITEM}$0", "}"],
+    "description": "Concerto Enum"
+  },
+  "Namespace": {
+    "prefix": "namespace",
+    "body": ["namespace ${1:foo} "],
+    "description": "Concentro Namespace contains the base definitions of everything"
+  },
+  "Import": {
+    "prefix": "imp",
+    "body": ["import ${1:foo} "],
+    "description": "imports the types, it can either be qualified or can use wildcards"
+  },
+  "String": {
+    "prefix": "str",
+    "body": ["o String ${1:name}"],
+    "description": "a UTF8 encoded String"
+  },
+  "Double": {
+    "prefix": "double",
+    "body": ["o Double ${1:name}"],
+    "description": "a double precision 64 bit numeric value"
+  },
+  "Integer": {
+    "prefix": "int",
+    "body": ["o Integer ${1:name}"],
+    "description": "a 32 bit signed whole number."
+  },
+  "Long": {
+    "prefix": "long",
+    "body": ["o Long ${1:name}"],
+    "description": "a 64 bit signed whole number."
+  },
+  "DateTime": {
+    "prefix": "date",
+    "body": ["o DateTime ${1:name}"],
+    "description": "an ISO-8601 compatible time instance, with optional time zone and UTZ offset."
+  },
+  "Boolean": {
+    "prefix": "bool",
+    "body": ["o Boolean ${1:name}"],
+    "description": "a Boolean value, either true or false."
+  }
 }
