@@ -1,0 +1,7 @@
+{
+  "Contract": {
+    "prefix": "contract",
+    "body": ["contract ${1:contractName} over ${2:Model} {", "}"],
+    "description": "Ergo Contract"
+  }
+}

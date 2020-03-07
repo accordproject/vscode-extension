@@ -1,156 +1,160 @@
 {
-	"name": "cicero-vscode-extension",
-	"displayName": "Accord Project",
-	"description": "Accord Project extension for Visual Studio Code, providing tools for template development.",
-	"author": "Clause",
-	"license": "Apache-2.0",
-	"version": "0.20.9",
-	"publisher": "accordproject",
-	"icon": "icon.png",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/accordproject/cicero-vscode-extension"
-	},
-	"engines": {
-		"vscode": "^1.25.0"
-	},
-	"scripts": {
-		"compile:client": "tsc -p ./",
-		"watch:client": "tsc -w -p ./",
-		"update-vscode": "node ./node_modules/vscode/bin/install",
-		"licchk": "license-check-and-add",
-		"postinstall": "node ./node_modules/vscode/bin/install",
-		"package:vsix": "node ./node_modules/vsce/out/vsce package",
-		"prepublish": "tsc -p ./",
-		"pretest": "npm run lint & npm run licchk",
-		"test": "nyc node ./node_modules/vscode/bin/test --compilers ts:ts-node/register ./test/*.test.ts",
-		"tslint": "tslint",
-		"lint": "npm run tslint 'src/**/*.ts' 'test/extension.test.ts'"
-	},
-	"devDependencies": {
-		"@types/chai": "^3.5.2",
-		"@types/mocha": "^2.2.33",
-		"@types/node": "^6.14.7",
-		"angular-tslint-rules": "^1.20.1",
-		"chai": "^4.2.0",
-		"license-check-and-add": "^2.3.6",
-		"mocha": "^5.2.0",
-		"nyc": "^14.1.1",
-		"ts-node": "^4.1.0",
-		"tslint": "^5.20.0",
-		"tslint-loader": "^3.5.4",
-		"typescript": "^2.9.2",
-		"vsce": "^1.68.0",
-		"vscode": "^1.1.36"
-	},
-	"dependencies": {
-		"vscode-languageclient": "^4.4.2"
-	},
-	"activationEvents": [
-		"onLanguage:ergo",
-		"onLanguage:concerto",
-		"onLanguage:ciceroMark",
-		"onLanguage:markdown"
-	],
-	"main": "./out/src/extension",
-	"categories": [
-		"Programming Languages",
-		"Snippets"
-	],
-	"contributes": {
-		"languages": [
-			{
-				"id": "ergo",
-				"aliases": [
-					"Ergo",
-					"ergo"
-				],
-				"extensions": [
-					".ergo"
-				],
-				"configuration": "./ergo.language-configuration.json"
-			},
-			{
-				"id": "ciceroMark",
-				"aliases": [
-					"CiceroMark"
-				],
-				"extensions": [
-					".tem.md"
-				],
-				"configuration": "./ciceroMark.language-configuration.json"
-			},
-			{
-				"id": "concerto",
-				"aliases": [
-					"Concerto model",
-					"concerto"
-				],
-				"extensions": [
-					".cto"
-				],
-				"configuration": "./concerto.language-configuration.json"
-			}
-		],
-		"grammars": [
-			{
-				"language": "ergo",
-				"scopeName": "source.ergo",
-				"path": "./syntaxes/ergo.tmLanguage.json"
-			},
-			{
-				"language": "ciceroMark",
-				"scopeName": "source.ciceroMark",
-				"path": "./syntaxes/ciceroMark.tmLanguage.json"
-			},
-			{
-				"language": "concerto",
-				"scopeName": "source.concerto",
-				"path": "./syntaxes/concerto.tmLanguage.json"
-			}
-		],
-		"snippets": [
-			{
-				"language": "concerto",
-				"path": "./snippets/concerto.json"
-			}
-		]
-	},
-	"license-check-and-add-config": {
-		"folder": ".",
-		"license": "HEADER",
-		"exact_paths_method": "EXCLUDE",
-		"exact_paths": [
-			"node_modules",
-			"out",
-			"server",
-			".vscode-test",
-			"coverage",
-			"LICENSE",
-			"HEADER",
-			"README.md"
-		],
-		"file_type_method": "EXCLUDE",
-		"file_types": [
-			".txt",
-			".vsix",
-			".DS_Store",
-			".vscodeignore"
-		],
-		"insert_license": false,
-		"license_formats": {
-			"ts|cto|js|ergo": {
-				"prepend": "/*",
-				"append": " */",
-				"eachLine": {
-					"prepend": " * "
-				}
-			},
-			"vscodeignore": {
-				"eachLine": {
-					"prepend": "# "
-				}
-			}
-		}
-	}
+  "name": "cicero-vscode-extension",
+  "displayName": "Accord Project",
+  "description": "Accord Project extension for Visual Studio Code, providing tools for template development.",
+  "author": "Clause",
+  "license": "Apache-2.0",
+  "version": "0.20.9",
+  "publisher": "accordproject",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/accordproject/cicero-vscode-extension"
+  },
+  "engines": {
+    "vscode": "^1.25.0"
+  },
+  "scripts": {
+    "compile:client": "tsc -p ./",
+    "watch:client": "tsc -w -p ./",
+    "update-vscode": "node ./node_modules/vscode/bin/install",
+    "licchk": "license-check-and-add",
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "package:vsix": "node ./node_modules/vsce/out/vsce package",
+    "prepublish": "tsc -p ./",
+    "pretest": "npm run lint & npm run licchk",
+    "test": "nyc node ./node_modules/vscode/bin/test --compilers ts:ts-node/register ./test/*.test.ts",
+    "tslint": "tslint",
+    "lint": "npm run tslint 'src/**/*.ts' 'test/extension.test.ts'"
+  },
+  "devDependencies": {
+    "@types/chai": "^3.5.2",
+    "@types/mocha": "^2.2.33",
+    "@types/node": "^6.14.7",
+    "angular-tslint-rules": "^1.20.1",
+    "chai": "^4.2.0",
+    "license-check-and-add": "^2.3.6",
+    "mocha": "^5.2.0",
+    "nyc": "^14.1.1",
+    "ts-node": "^4.1.0",
+    "tslint": "^5.20.0",
+    "tslint-loader": "^3.5.4",
+    "typescript": "^2.9.2",
+    "vsce": "^1.68.0",
+    "vscode": "^1.1.36"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^4.4.2"
+  },
+  "activationEvents": [
+    "onLanguage:ergo",
+    "onLanguage:concerto",
+    "onLanguage:ciceroMark",
+    "onLanguage:markdown"
+  ],
+  "main": "./out/src/extension",
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "ergo",
+        "aliases": [
+          "Ergo",
+          "ergo"
+        ],
+        "extensions": [
+          ".ergo"
+        ],
+        "configuration": "./ergo.language-configuration.json"
+      },
+      {
+        "id": "ciceroMark",
+        "aliases": [
+          "CiceroMark"
+        ],
+        "extensions": [
+          ".tem.md"
+        ],
+        "configuration": "./ciceroMark.language-configuration.json"
+      },
+      {
+        "id": "concerto",
+        "aliases": [
+          "Concerto model",
+          "concerto"
+        ],
+        "extensions": [
+          ".cto"
+        ],
+        "configuration": "./concerto.language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "ergo",
+        "scopeName": "source.ergo",
+        "path": "./syntaxes/ergo.tmLanguage.json"
+      },
+      {
+        "language": "ciceroMark",
+        "scopeName": "source.ciceroMark",
+        "path": "./syntaxes/ciceroMark.tmLanguage.json"
+      },
+      {
+        "language": "concerto",
+        "scopeName": "source.concerto",
+        "path": "./syntaxes/concerto.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "concerto",
+        "path": "./snippets/concerto.json"
+      },
+      {
+        "language": "ergo",
+        "path": "./snippets/ergo.json"
+      }
+    ]
+  },
+  "license-check-and-add-config": {
+    "folder": ".",
+    "license": "HEADER",
+    "exact_paths_method": "EXCLUDE",
+    "exact_paths": [
+      "node_modules",
+      "out",
+      "server",
+      ".vscode-test",
+      "coverage",
+      "LICENSE",
+      "HEADER",
+      "README.md"
+    ],
+    "file_type_method": "EXCLUDE",
+    "file_types": [
+      ".txt",
+      ".vsix",
+      ".DS_Store",
+      ".vscodeignore"
+    ],
+    "insert_license": false,
+    "license_formats": {
+      "ts|cto|js|ergo": {
+        "prepend": "/*",
+        "append": " */",
+        "eachLine": {
+          "prepend": " * "
+        }
+      },
+      "vscodeignore": {
+        "eachLine": {
+          "prepend": "# "
+        }
+      }
+    }
+  }
 }
