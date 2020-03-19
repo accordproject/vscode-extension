@@ -15,6 +15,7 @@
 		"@accordproject/concerto-core": "0.82.6",
 		"@accordproject/ergo-compiler": "0.20.9",
 		"fast-safe-stringify": "2.0.6",
+		"find-up": "^4.1.0",
 		"glob": "^7.1.4",
 		"vscode-languageserver": "^4.3.0",
 		"vscode-uri": "^1.0.6"

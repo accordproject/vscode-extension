@@ -31,6 +31,7 @@ const cicero_core_1 = require("@accordproject/cicero-core");
 const ergo_compiler_1 = require("@accordproject/ergo-compiler");
 const concerto_core_1 = require("@accordproject/concerto-core");
 const util = require('util');
+const findUp = require('find-up');
 // Creates the LSP connection
 let connection = vscode_languageserver_1.createConnection(vscode_languageserver_1.ProposedFeatures.all);
 // Create a manager for open text documents
@@ -52,25 +53,30 @@ const FULL_RANGE = {
  * @returns {string} the root file path
  */
 function getTemplateRoot(pathStr, textDocument, diagnosticMap) {
-    let currentPath = pathStr;
-    while (currentPath !== '.') {
-        connection.console.log(`- ${currentPath}`);
+    return __awaiter(this, void 0, void 0, function* () {
+        let packageJsonPath = yield findUp('package.json').then(ret_value => {
+            return ret_value;
+        });
+        connection.console.log(`- package.json path : ${packageJsonPath}`);
         try {
-            const packageJsonContents = getEditedFileContents(currentPath + '/package.json');
+            const packageJsonContents = getEditedFileContents(packageJsonPath);
             const packageJson = JSON.parse(packageJsonContents);
             if (packageJson.accordproject) {
-                return currentPath;
+                let templateRoot = path.normalize(path.join(packageJsonPath, '..'));
+                connection.console.log(`- Template Root ${templateRoot}`);
+                return templateRoot;
             }
         }
         catch (err) {
             connection.console.log(`- exception ${err}`);
-            currentPath = path.normalize(path.join(currentPath, '..'));
         }
-    }
-    connection.console.log(`Failed to find template path for ${pathStr}`);
-    const error = { message: `${pathStr} is not a sub-folder of an Accord Project template. Ensure a parent folder contains a valid package.json.` };
-    pushDiagnostic(vscode_languageserver_1.DiagnosticSeverity.Error, textDocument, error, 'template', diagnosticMap);
-    return null;
+        connection.console.log(`Failed to find template path for ${pathStr}`);
+        const error = {
+            message: `${pathStr} is not a sub-folder of an Accord Project template. Ensure a parent folder contains a valid package.json.`
+        };
+        pushDiagnostic(vscode_languageserver_1.DiagnosticSeverity.Error, textDocument, error, 'template', diagnosticMap);
+        return null;
+    });
 }
 /**
  * Returns the contents of a file from disk, or if the file
@@ -260,7 +266,7 @@ function compileErgoFiles(textDocument, diagnosticMap, templateCache) {
         try {
             const pathStr = path.resolve(fileUriToPath_1.default(textDocument.uri));
             const folder = pathStr.substring(0, pathStr.lastIndexOf("/") + 1);
-            const parentDir = getTemplateRoot(pathStr, textDocument, diagnosticMap);
+            const parentDir = yield getTemplateRoot(pathStr, textDocument, diagnosticMap);
             if (!parentDir) {
                 return false;
             }
@@ -300,7 +306,7 @@ function validateModels(textDocument, diagnosticMap, templateCache) {
         const pathStr = path.resolve(fileUriToPath_1.default(textDocument.uri));
         const folder = pathStr.substring(0, pathStr.lastIndexOf("/") + 1);
         try {
-            const parentDir = getTemplateRoot(pathStr, textDocument, diagnosticMap);
+            const parentDir = yield getTemplateRoot(pathStr, textDocument, diagnosticMap);
             if (!parentDir) {
                 return false;
             }
@@ -367,7 +373,7 @@ function validateTemplateFile(textDocument, diagnosticMap, templateCache) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const pathStr = path.resolve(fileUriToPath_1.default(textDocument.uri));
-            const parentDir = getTemplateRoot(pathStr, textDocument, diagnosticMap);
+            const parentDir = yield getTemplateRoot(pathStr, textDocument, diagnosticMap);
             if (!parentDir) {
                 return false;
             }
@@ -405,7 +411,7 @@ function parseSampleFile(textDocument, diagnosticMap, templateCache) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const pathStr = path.resolve(fileUriToPath_1.default(textDocument.uri));
-            const parentDir = getTemplateRoot(pathStr, textDocument, diagnosticMap);
+            const parentDir = yield getTemplateRoot(pathStr, textDocument, diagnosticMap);
             if (!parentDir || !templateCache[parentDir] || !templateCache[parentDir].template) {
                 return false;
             }
