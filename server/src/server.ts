@@ -29,9 +29,6 @@ import { LogicManager } from '@accordproject/ergo-compiler';
 import { ModelFile } from '@accordproject/concerto-core';
 
 const util = require('util');
-const findUp = require('find-up');
-
-
 // Creates the LSP connection
 let connection = createConnection(ProposedFeatures.all);
 
@@ -56,38 +53,29 @@ const FULL_RANGE = {
  * @param {TextDocument} textDocument the textDocument we are processing
  * @returns {string} the root file path
  */
-async function getTemplateRoot(pathStr, textDocument, diagnosticMap) {
+function getTemplateRoot(pathStr, textDocument, diagnosticMap) {
 
-    let packageJsonPath = await findUp('package.json').then(ret_value => {
-        return ret_value;
-    });
+    let currentPath = pathStr;
 
-    connection.console.log(`- package.json path : ${packageJsonPath}`);
+    while(currentPath !== '/') {
+        connection.console.log( `- ${currentPath}`);
 
-    try {
-        const packageJsonContents = getEditedFileContents(packageJsonPath);
-        const packageJson = JSON.parse(packageJsonContents);
-
-        if (packageJson.accordproject) {
-            let templateRoot = path.normalize(path.join(packageJsonPath, '..'));
-            connection.console.log(`- Template Root ${templateRoot}`);
-            return templateRoot;
+        try {
+            const packageJsonContents = getEditedFileContents(currentPath + '/package.json');
+            const packageJson = JSON.parse(packageJsonContents);
+            if(packageJson.accordproject) {
+                return currentPath;
+            }
         }
-    } catch (err) {
-        connection.console.log(`- exception ${err}`);
+        catch(err) {
+            connection.console.log( `- exception ${err}`);
+            currentPath = path.normalize(path.join(currentPath, '..'));
+        }
     }
 
-    connection.console.log(`Failed to find template path for ${pathStr}`);
-    const error = {
-        message: `${pathStr} is not a sub-folder of an Accord Project template. Ensure a parent folder contains a valid package.json.`
-    };
-    pushDiagnostic(
-        DiagnosticSeverity.Error,
-        textDocument,
-        error,
-        'template',
-        diagnosticMap
-    );
+    connection.console.log( `Failed to find template path for ${pathStr}`);
+    const error = {message: `${pathStr} is not a sub-folder of an Accord Project template. Ensure a parent folder contains a valid package.json.`};
+    pushDiagnostic(DiagnosticSeverity.Error, textDocument, error, 'template', diagnosticMap);
     return null;
 }
 
@@ -307,7 +295,7 @@ async function compileErgoFiles(textDocument: TextDocument, diagnosticMap, templ
     try {
         const pathStr = path.resolve(fileUriToPath(textDocument.uri));
         const folder = pathStr.substring(0,pathStr.lastIndexOf("/")+1);
-        const parentDir = await getTemplateRoot(pathStr, textDocument, diagnosticMap);
+        const parentDir = getTemplateRoot(pathStr, textDocument, diagnosticMap);
 
         if(!parentDir) {
             return false;
@@ -350,7 +338,7 @@ async function validateModels(textDocument: TextDocument, diagnosticMap, templat
     const folder = pathStr.substring(0,pathStr.lastIndexOf("/")+1);
 
     try {
-        const parentDir = await getTemplateRoot(pathStr, textDocument, diagnosticMap);
+        const parentDir = getTemplateRoot(pathStr, textDocument, diagnosticMap);
         if(!parentDir) {
             return false;
         }
@@ -423,7 +411,7 @@ async function validateTemplateFile(textDocument: TextDocument, diagnosticMap, t
 
     try {
         const pathStr = path.resolve(fileUriToPath(textDocument.uri));
-        const parentDir = await getTemplateRoot(pathStr, textDocument, diagnosticMap);
+        const parentDir = getTemplateRoot(pathStr, textDocument, diagnosticMap);
         if(!parentDir) {
             return false;
         }
@@ -463,7 +451,7 @@ async function parseSampleFile(textDocument: TextDocument, diagnosticMap, templa
 
     try {
         const pathStr = path.resolve(fileUriToPath(textDocument.uri));
-        const parentDir = await getTemplateRoot(pathStr, textDocument, diagnosticMap);
+        const parentDir = getTemplateRoot(pathStr, textDocument, diagnosticMap);
         if(!parentDir || !templateCache[parentDir] || !templateCache[parentDir].template) {
             return false;
         }
