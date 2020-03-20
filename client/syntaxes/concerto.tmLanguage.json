@@ -2250,6 +2250,11 @@
 					}
 				},
 				{
+					"name": "variable.other.readwrite.js",
+					"match": "([[:upper:]]*)(-)([_$[:digit:][:upper:]]*)(?![_$[:alnum:]])"
+
+				},
+				{
 					"name": "constant.other.js",
 					"match": "([[:upper:]][_$[:digit:][:upper:]]*)(?![_$[:alnum:]])"
 				},
