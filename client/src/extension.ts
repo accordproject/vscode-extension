@@ -39,7 +39,8 @@ export function activate(context: ExtensionContext) {
 			{scheme: 'file', language: 'ergo'}, 
 			{scheme: 'file', language: 'concerto'},
 			{scheme: 'file', language: 'ciceroMark'},
-			{scheme: 'file', language: 'markdown', pattern: '**/sample*.md'}
+			{scheme: 'file', language: 'markdown', pattern: '**/sample*.md'},
+			{scheme: 'file', language: 'image', pattern: 'logo.png'}
 		],
 		synchronize: {
 			// Synchronize the setting section 'languageServerExample' to the server

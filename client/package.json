@@ -50,7 +50,8 @@
 		"onLanguage:ergo",
 		"onLanguage:concerto",
 		"onLanguage:ciceroMark",
-		"onLanguage:markdown"
+		"onLanguage:markdown",
+		"onLanguage:image"
 	],
 	"main": "./out/src/extension",
 	"categories": [
@@ -90,6 +91,17 @@
 					".cto"
 				],
 				"configuration": "./concerto.language-configuration.json"
+			},
+			{
+				"id": "image",
+				"aliases": [
+					"PNG Image",
+					"Logo"
+				],
+				"extensions": [
+					".png"
+				],
+				"configuration": "./logo.language-configuration.json"
 			}
 		],
 		"grammars": [
