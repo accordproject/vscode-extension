@@ -58,7 +58,7 @@ function getTemplateRoot(pathStr, textDocument, diagnosticMap) {
 
     let currentPath = pathStr;
 
-    while(currentPath !== '.') {
+    while(currentPath !== '/' && currentPath.split(":").pop() !== '\\') {
         // connection.console.log( `- ${currentPath}`);
 
         try {
