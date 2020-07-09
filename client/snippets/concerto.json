@@ -1,56 +1,84 @@
 {
-  "Asset": {
-		"prefix": "asset",
-		"body": [
-			"asset ${1:assetName} identified by ${2:assetKey} {",
-			"\to String ${2}$0",
-			"}"
-		],
-		"description": "Concerto Asset"
+	"Asset": {
+	  "prefix": "asset",
+	  "body": [
+		"asset ${1:assetName} identified by ${2:assetKey} {",
+		"\to String ${2}$0",
+		"}"
+	  ],
+	  "description": "Concerto assets define long-lived (identified) entities"
 	},
 	"Participant": {
-		"prefix": "participant",
-		"body": [
-			"participant ${1:participantName} identified by ${2:participantKey} {",
-			"\to String ${2}$0",
-			"}"
-		],
-		"description": "Concerto Participant"
+	  "prefix": "participant",
+	  "body": [
+		"participant ${1:participantName} identified by ${2:participantKey} {",
+		"\to String ${2}$0",
+		"}"
+	  ],
+	  "description": "Concerto participants define people or organizations"
 	},
 	"Transaction": {
-		"prefix": "transaction",
-		"body": [
-			"transaction ${1:transactionName} {",
-			"\to String ${2:detail}$0",
-			"}"
-		],
-		"description": "Concerto Transaction"
+	  "prefix": "transaction",
+	  "body": [
+		"transaction ${1:transactionName} {",
+		"\to String ${2:detail}$0",
+		"}"
+	  ],
+	  "description": "Concerto transaction define electronic messages that change the state of assets or participants"
 	},
-  "Event": {
-		"prefix": "event",
-		"body": [
-			"event ${1:eventName} {",
-			"\to String ${2:detail}$0",
-			"}"
-		],
-		"description": "Concerto Event"
+	"Event": {
+	  "prefix": "event",
+	  "body": ["event ${1:eventName} {", "\to String ${2:detail}$0", "}"],
+	  "description": "Concerto events are emitted asynchronously by business logic"
 	},
 	"Concept": {
-		"prefix": "concept",
-		"body": [
-			"concept ${1:conceptName} {",
-			"\to String ${1}$0",
-			"}"
-		],
-		"description": "Concerto Concept"
+	  "prefix": "concept",
+	  "body": ["concept ${1:conceptName} {", "\to String ${2:detail}$0", "}"],
+	  "description": "Concerto concepts are general purpose class definitions"
 	},
 	"Enum": {
-		"prefix": "enum",
-		"body": [
-			"enum ${1:enumName} {",
-			"\to ${2:ITEM}$0",
-			"}"
-		],
-		"description": "Concerto Enum"
+	  "prefix": "enum",
+	  "body": ["enum ${1:enumName} {", "\to ${2:ITEM}$0", "}"],
+	  "description": "Concerto enumerations define lists of static values"
+	},
+	"Namespace": {
+	  "prefix": "namespace",
+	  "body": ["namespace ${1:org.accordproject.color} "],
+	  "description": "Concerto namespaces group related definitions"
+	},
+	"Import": {
+	  "prefix": "import",
+	  "body": ["import ${1:org.accordproject.color.Color} from ${2:https://models.accordproject.org/color.cto}"],
+	  "description": "Concerto imports allow types to be used from other namespaces"
+	},
+	"String": {
+	  "prefix": "string",
+	  "body": ["o String ${1:name}"],
+	  "description": "UTF8 encoded String"
+	},
+	"Double": {
+	  "prefix": "double",
+	  "body": ["o Double ${1:name}"],
+	  "description": "Double precision 64 bit numeric value"
+	},
+	"Integer": {
+	  "prefix": "int",
+	  "body": ["o Integer ${1:name}"],
+	  "description": "32 bit signed whole number."
+	},
+	"Long": {
+	  "prefix": "long",
+	  "body": ["o Long ${1:name}"],
+	  "description": "64 bit signed whole number."
+	},
+	"DateTime": {
+	  "prefix": "date",
+	  "body": ["o DateTime ${1:name}"],
+	  "description": "ISO-8601 compatible time instance, with optional time zone and UTZ offset."
+	},
+	"Boolean": {
+	  "prefix": "bool",
+	  "body": ["o Boolean ${1:name}"],
+	  "description": "Boolean value, either true or false."
 	}
-}
+  }
