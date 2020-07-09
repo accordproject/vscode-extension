@@ -19,7 +19,7 @@ import {
 	Diagnostic, DiagnosticSeverity, TextDocument
 } from 'vscode-languageserver';
 
-import { glob } from 'glob';
+import * as glob from 'glob';
 import * as fs from 'fs';
 import * as path from 'path';
 import fileUriToPath from './fileUriToPath';
@@ -59,7 +59,7 @@ function getTemplateRoot(pathStr, textDocument, diagnosticMap) {
     let currentPath = pathStr;
 
     while(currentPath !== '.') {
-        connection.console.log( `- ${currentPath}`);
+        // connection.console.log( `- ${currentPath}`);
 
         try {
             const packageJsonContents = getEditedFileContents(currentPath + '/package.json');
@@ -69,7 +69,7 @@ function getTemplateRoot(pathStr, textDocument, diagnosticMap) {
             }
         }
         catch(err) {
-            connection.console.log( `- exception ${err}`);
+            // connection.console.log( `- exception ${err}`);
             currentPath = path.normalize(path.join(currentPath, '..'));
         }
     }
@@ -90,14 +90,14 @@ function getEditedFileContents(file) {
     const key = 'file://' + file;
     const document = documents.get(key);
 
-    connection.console.log(`Getting ${key}`)
+    // connection.console.log(`Getting ${key}`)
 
     if(document) {
-        connection.console.log(`- returning editor content`)
+        // connection.console.log(`- returning editor content`)
         return document.getText();
     }
     else {
-        connection.console.log(`- returning file system content`)
+        // connection.console.log(`- returning file system content`)
         return fs.readFileSync(file, 'utf8');    
     }
 }
@@ -268,7 +268,9 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
             }
 
             // if ergo is valid we proceed to check we can build the template
-            if(ergoValid) {
+            // this is disabled, because it doesn't respect unsaved changes
+            // and it will write the models back out to disk, potentially overwriting unsaved models
+            if(false && ergoValid) {
                 await validateTemplateFile(textDocument, diagnosticMap, templateCache);
             }            
         }
@@ -312,6 +314,7 @@ async function compileErgoFiles(textDocument: TextDocument, diagnosticMap, templ
             for (const file of ergoFiles) {
                 clearErrors(file, 'logic', diagnosticMap);
                 const contents = getEditedFileContents(file);
+                connection.console.log(`- ${file}`)
                 logicManager.updateLogic(contents, file);
             }
             await logicManager.compileLogic(true);
@@ -372,6 +375,7 @@ async function validateModels(textDocument: TextDocument, diagnosticMap, templat
                 clearErrors(file, 'model', diagnosticMap);
                 const contents = getEditedFileContents(file);
                 const modelFile: any = new ModelFile(modelManager, contents, file);
+                connection.console.log(`- ${file}`)
                 if (!modelManager.getModelFile(modelFile.getNamespace())) {
                     modelManager.addModelFile(contents, file, true);
                 } else {
@@ -381,6 +385,7 @@ async function validateModels(textDocument: TextDocument, diagnosticMap, templat
 
             // download external dependencies and validate
             try {
+                connection.console.log(`Downloading external models`)
                 await modelManager.updateExternalModels();
             }
             catch(err) {
@@ -404,6 +409,7 @@ async function validateModels(textDocument: TextDocument, diagnosticMap, templat
 
 /**
  * Validate that we can build the template archive
+ * WARNING: doesn't use unsaved changes from editor buffers!
  * 
  * @param textDocument - a TextDocument. WARNING, this may not be the .tem file!
  * @return Promise<boolean> true the template is valid
@@ -420,7 +426,7 @@ async function validateTemplateFile(textDocument: TextDocument, diagnosticMap, t
         try {
             connection.console.log(`Validating template under: ${parentDir}`);
             clearErrors(parentDir + '/text/grammar.tem.md', 'template', diagnosticMap);
-            const template = await Template.fromDirectory(parentDir);
+            const template = await Template.fromDirectory(parentDir); // WARNING, doesn't use unsaved changes!
             const grammar = getEditedFileContents(parentDir + '/text/grammar.tem.md');
             template.parserManager.buildGrammar(grammar);
             template.validate();
