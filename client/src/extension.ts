@@ -32,7 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
 	let serverOptions: ServerOptions = {
 		run : { module: serverModule, transport: TransportKind.ipc },
 		debug: { module: serverModule, transport: TransportKind.ipc, options: debugOptions }
-	}
+	};
 	
 	// Options to control the language client
 	let clientOptions: LanguageClientOptions = {
@@ -49,7 +49,7 @@ export function activate(context: vscode.ExtensionContext) {
 			// Notify the server about file changes to '.clientrc files contain in the workspace
 			fileEvents: vscode.workspace.createFileSystemWatcher('**/.clientrc')
 		}
-	}
+	};
 	
 	// Create the language client and start the client.
 	let disposable = new LanguageClient('Cicero', 'Cicero', serverOptions, clientOptions).start();
