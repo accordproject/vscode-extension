@@ -22,7 +22,7 @@ Accord Project source code files are made available under the Apache License, Ve
 
 ## Release Notes
 
-### 0.20.15
+### 0.20.16
 
 - Improved documentation
 - Added Ergo code snippets
