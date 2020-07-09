@@ -23,7 +23,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const vscode_languageserver_1 = require("vscode-languageserver");
-const glob_1 = require("glob");
+const glob = require("glob");
 const fs = require("fs");
 const path = require("path");
 const fileUriToPath_1 = require("./fileUriToPath");
@@ -54,7 +54,7 @@ const FULL_RANGE = {
 function getTemplateRoot(pathStr, textDocument, diagnosticMap) {
     let currentPath = pathStr;
     while (currentPath !== '.') {
-        connection.console.log(`- ${currentPath}`);
+        // connection.console.log( `- ${currentPath}`);
         try {
             const packageJsonContents = getEditedFileContents(currentPath + '/package.json');
             const packageJson = JSON.parse(packageJsonContents);
@@ -63,7 +63,7 @@ function getTemplateRoot(pathStr, textDocument, diagnosticMap) {
             }
         }
         catch (err) {
-            connection.console.log(`- exception ${err}`);
+            // connection.console.log( `- exception ${err}`);
             currentPath = path.normalize(path.join(currentPath, '..'));
         }
     }
@@ -80,13 +80,13 @@ function getTemplateRoot(pathStr, textDocument, diagnosticMap) {
 function getEditedFileContents(file) {
     const key = 'file://' + file;
     const document = documents.get(key);
-    connection.console.log(`Getting ${key}`);
+    // connection.console.log(`Getting ${key}`)
     if (document) {
-        connection.console.log(`- returning editor content`);
+        // connection.console.log(`- returning editor content`)
         return document.getText();
     }
     else {
-        connection.console.log(`- returning file system content`);
+        // connection.console.log(`- returning file system content`)
         return fs.readFileSync(file, 'utf8');
     }
 }
@@ -233,7 +233,9 @@ function validateTextDocument(textDocument) {
                         break;
                 }
                 // if ergo is valid we proceed to check we can build the template
-                if (ergoValid) {
+                // this is disabled, because it doesn't respect unsaved changes
+                // and it will write the models back out to disk, potentially overwriting unsaved models
+                if (false && ergoValid) {
                     yield validateTemplateFile(textDocument, diagnosticMap, templateCache);
                 }
             }
@@ -269,10 +271,11 @@ function compileErgoFiles(textDocument, diagnosticMap, templateCache) {
                 let logicManager = templateCache[parentDir].logicManager;
                 connection.console.log(`Compiling ergo files under: ${parentDir}`);
                 // Find all ergo files in ./ relative to this file
-                const ergoFiles = glob_1.glob.sync(`{${folder},${parentDir}/logic/}**/*.ergo`);
+                const ergoFiles = glob.sync(`{${folder},${parentDir}/logic/}**/*.ergo`);
                 for (const file of ergoFiles) {
                     clearErrors(file, 'logic', diagnosticMap);
                     const contents = getEditedFileContents(file);
+                    connection.console.log(`- ${file}`);
                     logicManager.updateLogic(contents, file);
                 }
                 yield logicManager.compileLogic(true);
@@ -321,13 +324,14 @@ function validateModels(textDocument, diagnosticMap, templateCache) {
             const modelManager = logicManager.getModelManager();
             modelManager.clearModelFiles();
             // Find all cto files in ./ relative to this file or in the parent directory if this is a Cicero template.
-            const modelFiles = glob_1.glob.sync(`{${folder},${parentDir}/model/}**/*.cto`);
+            const modelFiles = glob.sync(`{${folder},${parentDir}/model/}**/*.cto`);
             // validate the model files
             try {
                 for (const file of modelFiles) {
                     clearErrors(file, 'model', diagnosticMap);
                     const contents = getEditedFileContents(file);
                     const modelFile = new concerto_core_1.ModelFile(modelManager, contents, file);
+                    connection.console.log(`- ${file}`);
                     if (!modelManager.getModelFile(modelFile.getNamespace())) {
                         modelManager.addModelFile(contents, file, true);
                     }
@@ -337,6 +341,7 @@ function validateModels(textDocument, diagnosticMap, templateCache) {
                 }
                 // download external dependencies and validate
                 try {
+                    connection.console.log(`Downloading external models`);
                     yield modelManager.updateExternalModels();
                 }
                 catch (err) {
@@ -359,6 +364,7 @@ function validateModels(textDocument, diagnosticMap, templateCache) {
 }
 /**
  * Validate that we can build the template archive
+ * WARNING: doesn't use unsaved changes from editor buffers!
  *
  * @param textDocument - a TextDocument. WARNING, this may not be the .tem file!
  * @return Promise<boolean> true the template is valid
@@ -374,7 +380,7 @@ function validateTemplateFile(textDocument, diagnosticMap, templateCache) {
             try {
                 connection.console.log(`Validating template under: ${parentDir}`);
                 clearErrors(parentDir + '/text/grammar.tem.md', 'template', diagnosticMap);
-                const template = yield cicero_core_1.Template.fromDirectory(parentDir);
+                const template = yield cicero_core_1.Template.fromDirectory(parentDir); // WARNING, doesn't use unsaved changes!
                 const grammar = getEditedFileContents(parentDir + '/text/grammar.tem.md');
                 template.parserManager.buildGrammar(grammar);
                 template.validate();

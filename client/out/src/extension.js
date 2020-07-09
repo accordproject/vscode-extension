@@ -13,9 +13,11 @@
  */
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.activate = void 0;
 const path = require("path");
-const vscode_1 = require("vscode");
+const vscode = require("vscode");
 const vscode_languageclient_1 = require("vscode-languageclient");
+const commandHandlers_1 = require("./commandHandlers");
 function activate(context) {
     // The server is implemented in node
     let serverModule = context.asAbsolutePath(path.join('server/src', 'server.js'));
@@ -40,11 +42,14 @@ function activate(context) {
             // Synchronize the setting section 'languageServerExample' to the server
             configurationSection: 'Cicero',
             // Notify the server about file changes to '.clientrc files contain in the workspace
-            fileEvents: vscode_1.workspace.createFileSystemWatcher('**/.clientrc')
+            fileEvents: vscode.workspace.createFileSystemWatcher('**/.clientrc')
         }
     };
     // Create the language client and start the client.
     let disposable = new vscode_languageclient_1.LanguageClient('Cicero', 'Cicero', serverOptions, clientOptions).start();
+    // Register commands
+    const command = 'cicero-vscode-extension.downloadExternalModels';
+    context.subscriptions.push(vscode.commands.registerCommand(command, commandHandlers_1.downloadExternalModels));
     // Push the disposable to the context's subscriptions so that the 
     // client can be deactivated on extension deactivation
     context.subscriptions.push(disposable);

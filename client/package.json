@@ -4,7 +4,7 @@
 	"description": "Accord Project extension for Visual Studio Code, providing tools for template development.",
 	"author": "Clause",
 	"license": "Apache-2.0",
-	"version": "0.20.10",
+	"version": "0.20.11",
 	"publisher": "accordproject",
 	"icon": "icon.png",
 	"repository": {
@@ -39,11 +39,12 @@
 		"ts-node": "^4.1.0",
 		"tslint": "^5.20.0",
 		"tslint-loader": "^3.5.4",
-		"typescript": "^2.9.2",
+		"typescript": "^3.9.6",
 		"vsce": "^1.68.0",
 		"vscode": "^1.1.36"
 	},
 	"dependencies": {
+		"@accordproject/concerto-core": "^0.82.7",
 		"vscode-languageclient": "^4.4.2"
 	},
 	"activationEvents": [
@@ -114,7 +115,29 @@
 				"language": "concerto",
 				"path": "./snippets/concerto.json"
 			}
-		]
+		],
+		"commands": [
+			{
+				"command": "cicero-vscode-extension.downloadExternalModels",
+				"title": "Download External Models",
+				"category": "Accord Project"
+			}
+		],
+		"menus": {
+			"explorer/context": [
+				{
+					"when": "explorerResourceIsFolder",
+					"command": "cicero-vscode-extension.downloadExternalModels",
+					"group": "AccordProject@1"
+				}
+			],
+			"commandPalette": [
+				{
+					"command": "cicero-vscode-extension.downloadExternalModels",
+					"when": "explorerResourceIsFolder"
+				}
+			]
+		}
 	},
 	"license-check-and-add-config": {
 		"folder": ".",

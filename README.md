@@ -44,6 +44,26 @@ We provide snippets generation for all the class method present in the Concerto 
 
 ## For Contributors
 
+### Edit and Run
+
+In the first terminal:
+
+```
+cd server
+npm run watch:server
+```
+
+In the second terminal:
+
+```
+cd client
+npm run watch:client
+```
+
+To develop and test the extension inside VSCode open the repository folder and then press F5.
+
+**NOTE** that the extension does not hot-reload. You must close Run the `Reload Window` command in the new VSCode window.
+
 ### Manual Build and Install
 
 Generate the installable VSIX file:
