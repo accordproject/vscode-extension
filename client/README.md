@@ -22,11 +22,11 @@ Accord Project source code files are made available under the Apache License, Ve
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
-
 ### 0.20.15
 
-Improve documentation.
+- Improved documentation
+- Added Ergo code snippets
+- Improved Concerto code snippets
 
 ### 0.20.14
 
