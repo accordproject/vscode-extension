@@ -21,4 +21,4 @@ cd ./server
 npm install
 
 cd ../client
-npm install && npm compile && npm test
+npm install && npm run compile && npm test
