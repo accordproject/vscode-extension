@@ -108,7 +108,11 @@
 			{
 				"language": "concerto",
 				"path": "./snippets/concerto.json"
-			}
+			},
+			{
+				"language": "ergo",
+				"path": "./snippets/ergo.json"
+			  }
 		],
 		"commands": [
 			{

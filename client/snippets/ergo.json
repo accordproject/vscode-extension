@@ -1,0 +1,16 @@
+{
+    "Contract": {
+      "prefix": "contract",
+      "body": ["contract ${1:contractName} over ${2:TemplateModel} {", "}"],
+      "description": "Ergo contract"
+    },
+    "Clause ": {
+      "prefix": "clause",
+      "body": [
+        "clause ${1:clauseName}(request : ${2:RequestType}) : ${3:ResponseType} {",
+        "\treturn ${4:example}",
+        "}"
+      ],
+      "description": "Ergo clause "
+    }
+  }
