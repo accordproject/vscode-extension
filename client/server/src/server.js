@@ -30,6 +30,9 @@ const fileUriToPath_1 = require("./fileUriToPath");
 const cicero_core_1 = require("@accordproject/cicero-core");
 const ergo_compiler_1 = require("@accordproject/ergo-compiler");
 const concerto_core_1 = require("@accordproject/concerto-core");
+const markdown_template_1 = require("@accordproject/markdown-template");
+const markdown_cicero_1 = require("@accordproject/markdown-cicero");
+const index_browser_js_1 = require("@accordproject/ergo-engine/index.browser.js");
 const util = require('util');
 // Creates the LSP connection
 let connection = vscode_languageserver_1.createConnection(vscode_languageserver_1.ProposedFeatures.all);
@@ -53,7 +56,7 @@ const FULL_RANGE = {
  */
 function getTemplateRoot(pathStr, textDocument, diagnosticMap) {
     let currentPath = pathStr;
-    while (currentPath !== '.') {
+    while (currentPath !== '/' && currentPath.split(":").pop() !== '\\') {
         // connection.console.log( `- ${currentPath}`);
         try {
             const packageJsonContents = getEditedFileContents(currentPath + '/package.json');
@@ -75,7 +78,8 @@ function getTemplateRoot(pathStr, textDocument, diagnosticMap) {
 /**
  * Returns the contents of a file from disk, or if the file
  * has been opened for editing, then the edited contents is returned.
- * @param file
+ * @param file the path to the file
+ * @returns {string} the contents of the file
  */
 function getEditedFileContents(file) {
     const key = 'file://' + file;
@@ -188,11 +192,6 @@ documents.onDidChangeContent((change) => __awaiter(void 0, void 0, void 0, funct
     documents.all().forEach(validateTextDocument);
 }));
 /**
- * A cache of LogicManager/template instances. The keys are the root folder names.
- * Values have a logicManager and a template property
- */
-const templateCache = {};
-/**
  * Called when the contents of a document changes
  *
  * @param textDocument - a TextDocument
@@ -200,43 +199,33 @@ const templateCache = {};
 function validateTextDocument(textDocument) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
+            const pathStr = path.resolve(fileUriToPath_1.default(textDocument.uri));
+            const fileExtension = path.extname(pathStr);
+            const basename = path.basename(pathStr);
             connection.console.log(`*** Document modified: ${textDocument.uri}`);
             /**
              * Map of diagnostics, with the key being the document URI
              * and the value being a Set of Diagnostic instances
              */
             const diagnosticMap = {};
-            const pathStr = path.resolve(fileUriToPath_1.default(textDocument.uri));
-            let fileExtension = path.extname(pathStr);
-            if (fileExtension === '.md') {
-                if (path.extname(path.basename(pathStr)) === '.tem') {
-                    fileExtension = '.tem.md';
-                }
-            }
+            /**
+             * A cache of LogicManager/template instances. The keys are the root folder names.
+             * Values have a logicManager, parserManager and data properties
+             */
+            const templateCache = {};
             // this will assemble all the models into a ModelManager
             // and validate - so it needs to always run before we do anything else
             const modelValid = yield validateModels(textDocument, diagnosticMap, templateCache);
             let ergoValid = true;
             // if the model is valid, then we proceed
             if (modelValid) {
-                switch (fileExtension) {
-                    case '.cto':
-                    case '.ergo':
-                        // if a cto or ergo file has been modified then we compile all ergo files
-                        ergoValid = yield compileErgoFiles(textDocument, diagnosticMap, templateCache);
-                        break;
-                    case '.tem.md':
-                        break;
-                    case '.md':
-                        // if a md file has changed we try to parse it
-                        yield parseSampleFile(textDocument, diagnosticMap, templateCache);
-                        break;
+                const grammarValid = yield validateGrammar(textDocument, diagnosticMap, templateCache);
+                if (basename === 'grammar.tem.md' || fileExtension === '.cto' || fileExtension === '.ergo') {
+                    ergoValid = yield compileErgoFiles(textDocument, diagnosticMap, templateCache);
                 }
-                // if ergo is valid we proceed to check we can build the template
-                // this is disabled, because it doesn't respect unsaved changes
-                // and it will write the models back out to disk, potentially overwriting unsaved models
-                if (false && ergoValid) {
-                    yield validateTemplateFile(textDocument, diagnosticMap, templateCache);
+                if (grammarValid && ergoValid) {
+                    // check the sample is valid
+                    yield parseSampleFile(textDocument, diagnosticMap, templateCache);
                 }
             }
             // send all the diagnostics we have accumulated back to the client
@@ -269,7 +258,7 @@ function compileErgoFiles(textDocument, diagnosticMap, templateCache) {
             try {
                 // get the template logic from cache
                 let logicManager = templateCache[parentDir].logicManager;
-                connection.console.log(`Compiling ergo files under: ${parentDir}`);
+                connection.console.log(`*** Compiling ergo files under: ${parentDir}`);
                 // Find all ergo files in ./ relative to this file
                 const ergoFiles = glob.sync(`{${folder},${parentDir}/logic/}**/*.ergo`);
                 for (const file of ergoFiles) {
@@ -293,7 +282,8 @@ function compileErgoFiles(textDocument, diagnosticMap, templateCache) {
     });
 }
 /**
- * Rebuild the model manager and validates all the models
+ * Rebuild the model manager and validates all the models. Models are cached
+ * in the template cache.
  *
  * @param textDocument - a TextDocument
  * @return Promise<boolean> true the model is valid
@@ -307,20 +297,14 @@ function validateModels(textDocument, diagnosticMap, templateCache) {
             if (!parentDir) {
                 return false;
             }
-            connection.console.log(`Validating model files under: ${parentDir}`);
+            connection.console.log(`*** Validating model files under: ${parentDir}`);
             // get the template logic from cache
-            let templateCacheEntry = templateCache[parentDir];
-            let logicManager = null;
-            if (!templateCacheEntry) {
-                logicManager = new ergo_compiler_1.LogicManager('cicero');
-                templateCache[parentDir] = {
-                    logicManager,
-                    template: null
-                };
-            }
-            else {
-                logicManager = templateCacheEntry.logicManager;
-            }
+            const logicManager = new ergo_compiler_1.LogicManager('cicero');
+            templateCache[parentDir] = {
+                logicManager,
+                parserManager: null,
+                data: null
+            };
             const modelManager = logicManager.getModelManager();
             modelManager.clearModelFiles();
             // Find all cto files in ./ relative to this file or in the parent directory if this is a Cicero template.
@@ -343,9 +327,11 @@ function validateModels(textDocument, diagnosticMap, templateCache) {
                 try {
                     connection.console.log(`Downloading external models`);
                     yield modelManager.updateExternalModels();
+                    connection.console.log(`Downloading completed.`);
                 }
                 catch (err) {
                     // we may be offline? Validate without external models
+                    connection.console.log(`Failed to download external models. Assuming offline. ${err}`);
                     modelManager.validateModelFiles();
                     pushDiagnostic(vscode_languageserver_1.DiagnosticSeverity.Warning, textDocument, err, 'model', diagnosticMap);
                 }
@@ -363,13 +349,12 @@ function validateModels(textDocument, diagnosticMap, templateCache) {
     });
 }
 /**
- * Validate that we can build the template archive
- * WARNING: doesn't use unsaved changes from editor buffers!
+ * Validate the grammar.tem.md file
  *
  * @param textDocument - a TextDocument. WARNING, this may not be the .tem file!
- * @return Promise<boolean> true the template is valid
+ * @return Promise<boolean> true if the grammar file is valid
  */
-function validateTemplateFile(textDocument, diagnosticMap, templateCache) {
+function validateGrammar(textDocument, diagnosticMap, templateCache) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const pathStr = path.resolve(fileUriToPath_1.default(textDocument.uri));
@@ -377,21 +362,48 @@ function validateTemplateFile(textDocument, diagnosticMap, templateCache) {
             if (!parentDir) {
                 return false;
             }
+            const grammarPath = parentDir + '/text/grammar.tem.md';
+            let templateCacheEntry = templateCache[parentDir];
+            if (!templateCacheEntry) {
+                return false;
+            }
+            const logicManager = templateCacheEntry.logicManager;
             try {
-                connection.console.log(`Validating template under: ${parentDir}`);
-                clearErrors(parentDir + '/text/grammar.tem.md', 'template', diagnosticMap);
-                const template = yield cicero_core_1.Template.fromDirectory(parentDir); // WARNING, doesn't use unsaved changes!
-                const grammar = getEditedFileContents(parentDir + '/text/grammar.tem.md');
-                template.parserManager.buildGrammar(grammar);
-                template.validate();
-                templateCache[parentDir].template = template;
-                connection.console.log(`==> saved grammar: ${template.getIdentifier()}`);
+                connection.console.log(`*** Validating grammar under: ${parentDir}`);
+                clearErrors(grammarPath, 'grammar', diagnosticMap);
+                const packageJsonContents = getEditedFileContents(parentDir + '/package.json');
+                const packageJson = JSON.parse(packageJsonContents);
+                const modelManager = templateCacheEntry.logicManager.getModelManager();
+                if (!packageJson.accordproject || !packageJson.accordproject.template) {
+                    const error = {
+                        message: 'package.json must have an accordproject.template attribute',
+                        fileName: parentDir + '/package.json'
+                    };
+                    pushDiagnostic(vscode_languageserver_1.DiagnosticSeverity.Error, textDocument, error, 'template', diagnosticMap);
+                }
+                else {
+                    clearErrors(parentDir + '/package.json', 'template', diagnosticMap);
+                }
+                const parserManager = new markdown_template_1.ParserManager(modelManager, null, packageJson.accordproject.template);
+                connection.console.log(`Created parser manager`);
+                const grammar = getEditedFileContents(grammarPath);
+                parserManager.setTemplate(grammar);
+                parserManager.buildParser();
+                connection.console.log(`Built parser`);
+                const formulas = parserManager.getFormulas();
+                formulas.forEach((x) => {
+                    logicManager.addTemplateFile(x.code, grammarPath);
+                });
+                const ergoEngine = new index_browser_js_1.EvalEngine();
+                parserManager.setFormulaEval((name) => cicero_core_1.TemplateInstance.ciceroFormulaEval(logicManager, packageJson.name, ergoEngine, name));
+                connection.console.log(`Setup formula evaluation`);
+                templateCache[parentDir].parserManager = parserManager;
                 return true;
             }
             catch (error) {
-                templateCache[parentDir].template = null;
-                error.fileName = parentDir + '/text/grammar.tem.md';
-                pushDiagnostic(vscode_languageserver_1.DiagnosticSeverity.Error, textDocument, error, 'template', diagnosticMap);
+                templateCache[parentDir].parserManager = null;
+                error.fileName = grammarPath;
+                pushDiagnostic(vscode_languageserver_1.DiagnosticSeverity.Error, textDocument, error, 'grammar', diagnosticMap);
             }
         }
         catch (error) {
@@ -404,31 +416,39 @@ function validateTemplateFile(textDocument, diagnosticMap, templateCache) {
 /**
  * Parse sample.md
  *
- * @param textDocument - a TextDocument
- * @return Promise<boolean> true the template and sample.md are valid
+ * @param textDocument - a TextDocument. WARNING, this may not be the sample.md file!
+ * @return Promise<boolean> true the sample.md file is valid wrt to the grammar
  */
 function parseSampleFile(textDocument, diagnosticMap, templateCache) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const pathStr = path.resolve(fileUriToPath_1.default(textDocument.uri));
             const parentDir = getTemplateRoot(pathStr, textDocument, diagnosticMap);
-            if (!parentDir || !templateCache[parentDir] || !templateCache[parentDir].template) {
+            if (!parentDir || !templateCache[parentDir] || !templateCache[parentDir].parserManager) {
                 return false;
             }
-            const template = templateCache[parentDir].template;
-            if (!template) {
+            const samplePath = parentDir + '/text/sample.md';
+            const parserManager = templateCache[parentDir].parserManager;
+            if (!parserManager) {
                 return false;
             }
-            connection.console.log(`Parsing text file using template: ${template.getIdentifier()}`);
-            clearErrors(textDocument.uri, 'sample', diagnosticMap);
+            connection.console.log(`*** Validating sample file ${pathStr}`);
+            clearErrors(samplePath, 'sample', diagnosticMap);
             try {
-                const clause = new cicero_core_1.Clause(template);
-                clause.parse(textDocument.getText());
-                connection.console.log(`Parsed sample.md: ${JSON.stringify(clause.getData(), null, 2)}`);
+                const templateMarkTransformer = new markdown_template_1.TemplateMarkTransformer();
+                // Transform text to ciceromark
+                const ciceroMarkTransformer = new markdown_cicero_1.CiceroMarkTransformer();
+                const sample = getEditedFileContents(samplePath);
+                const inputCiceroMark = ciceroMarkTransformer.fromMarkdownCicero(sample);
+                // Parse
+                const data = templateMarkTransformer.dataFromCiceroMark({ fileName: samplePath, content: inputCiceroMark }, parserManager, {});
+                connection.console.log(`Parsed sample.md: ${JSON.stringify(data, null, 2)}`);
+                templateCache[parentDir].data = data;
                 return true;
             }
             catch (error) {
-                error.fileName = textDocument.uri;
+                templateCache[parentDir].data = null;
+                error.fileName = samplePath;
                 pushDiagnostic(vscode_languageserver_1.DiagnosticSeverity.Error, textDocument, error, 'sample', diagnosticMap);
             }
         }
