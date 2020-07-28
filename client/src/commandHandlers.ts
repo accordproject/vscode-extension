@@ -14,24 +14,14 @@
 'use strict';
 
 import * as vscode from 'vscode';
-// import * as glob from 'glob';
-// import {
-// 	ModelManager
-// } from '@accordproject/concerto-core';
+import * as fs from 'fs';
+// import { Template } from '@accordproject/cicero-core';
 
-export async function downloadExternalModels(file: vscode.Uri) {
-
-	// vscode.window.showInformationMessage(`Downloading models for ${file.path}`);
-
-	// //     // Find all cto files in ./ relative to this file or in the parent directory if this is a Cicero template.
-	// const modelFiles = glob.sync(`${file.path}/**/*.cto`);
-	// const modelManager = new ModelManager();
-
-	// for (const file of modelFiles) {
-	// 	const textDocument = await vscode.workspace.openTextDocument(file);
-	// 	modelManager.addModelFile(textDocument.getText(), file, true);
-	// }
-
-	// await modelManager.updateExternalModels();
-	vscode.window.showInformationMessage(file.path);
+export async function exportArchive(file: vscode.Uri) {
+	// const template = await Template.fromDirectory(file.path);
+	// const archive = await template.toArchive();
+	// const outputPath = `${file.path}/${template.getIdentifier()}.cta`;
+	// fs.writeFileSync(outputPath, archive);
+	// vscode.window.showInformationMessage(`Created archive ${outputPath}`);
+	vscode.window.showInformationMessage(`Coming soon...`);
 }

@@ -22,6 +22,11 @@ Accord Project source code files are made available under the Apache License, Ve
 
 ## Release Notes
 
+### 0.21.0
+
+- Upgrade to Cicero 0.21
+- Enabled validation of grammar.tem.md and sample.mnd files
+
 ### 0.20.16
 
 - Improved documentation

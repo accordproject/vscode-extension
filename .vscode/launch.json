@@ -1,32 +1,36 @@
+// A launch configuration that compiles the extension and then opens it inside a new window
+// Use IntelliSense to learn about possible attributes.
+// Hover to view descriptions of existing attributes.
+// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
 {
 	"version": "0.2.0",
-	// List of configurations. Add new configurations or edit existing ones.
 	"configurations": [
 		{
-			"name": "Launch Client",
+			"name": "Run Extension",
 			"type": "extensionHost",
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
-			"args": ["--extensionDevelopmentPath=${workspaceRoot}/client" ],
-			"stopOnEntry": false,
-			"sourceMaps": true,
-			"outFiles": [ "${workspaceRoot}/client/out/src/**/*.js" ],
-			"preLaunchTask": "watch:client"
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.js"
+			],
+			"preLaunchTask": "${defaultBuildTask}"
 		},
 		{
-			"name": "Attach to Server",
-			"type": "node",
-			"request": "attach",
-			"port": 6009,
-			"sourceMaps": true,
-			"outFiles": [ "${workspaceRoot}/client/server/**/*.js" ],
-			"preLaunchTask": "watch:server"
-		}
-	],
-	"compounds": [
-		{
-			"name": "Client + Server",
-			"configurations": ["Launch Client", "Attach to Server"]
+			"name": "Extension Tests",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/test/suite/index"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/test/**/*.js"
+			],
+			"preLaunchTask": "${defaultBuildTask}"
 		}
 	]
 }

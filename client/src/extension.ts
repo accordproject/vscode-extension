@@ -18,7 +18,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
 
-import { downloadExternalModels } from "./commandHandlers";
+import { exportArchive } from './commandHandlers';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -36,7 +36,7 @@ export function activate(context: vscode.ExtensionContext) {
 	
 	// Options to control the language client
 	let clientOptions: LanguageClientOptions = {
-		// Register the server for plain text documents
+		// Register the server for documents
 		documentSelector: [
 			{scheme: 'file', language: 'ergo'}, 
 			{scheme: 'file', language: 'concerto'},
@@ -55,8 +55,8 @@ export function activate(context: vscode.ExtensionContext) {
 	let disposable = new LanguageClient('Cicero', 'Cicero', serverOptions, clientOptions).start();
 
 	// Register commands
-	const command = 'cicero-vscode-extension.downloadExternalModels';
-	context.subscriptions.push(vscode.commands.registerCommand(command, downloadExternalModels));
+	const command = 'cicero-vscode-extension.exportArchive';
+	context.subscriptions.push(vscode.commands.registerCommand(command, exportArchive));
 	
 	// Push the disposable to the context's subscriptions so that the 
 	// client can be deactivated on extension deactivation

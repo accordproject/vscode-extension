@@ -32,7 +32,7 @@ The extension is available from the Visual Studio Marketplace at https://marketp
 
 ### For Concerto
 
-We provide snippets generation for all the class method present in the Concerto languages.
+The extension provides code snippets for all the class method present in the Concerto languages.
 
 | Classes     |   Prefix    |
 | :---------- | :---------: |
@@ -42,6 +42,15 @@ We provide snippets generation for all the class method present in the Concerto 
 | Concept     |   concept   |
 | Enum        |    enum     |
 
+### For Ergo
+
+The extension provides code snippets for the Ergo language.
+
+| Expression  |   Prefix    |
+| :---------- | :---------: |
+| Contract    | contract    |
+| Clause      | clause      |
+
 ## For Contributors
 
 ### Edit and Run
@@ -50,6 +59,7 @@ In the first terminal:
 
 ```
 cd server
+npm i
 npm run watch:server
 ```
 
@@ -57,7 +67,8 @@ In the second terminal:
 
 ```
 cd client
-npm run watch:client
+npm i
+npm run watch
 ```
 
 To develop and test the extension inside VSCode open the repository folder and then press F5.

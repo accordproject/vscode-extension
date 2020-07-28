@@ -1,79 +1,20 @@
+// See https://go.microsoft.com/fwlink/?LinkId=733558
+// for the documentation about the tasks.json format
 {
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "compile",
-			"dependsOn": [
-				"compile:client",
-				"compile:server"
-			],
-			"problemMatcher": []
-		},
-		{
-			"label": "compile:client",
-			"type": "shell",
-			"command": "npm run compile:client",
-			"group": "build",
+			"type": "npm",
+			"script": "watch",
+			"problemMatcher": "$tsc-watch",
+			"isBackground": true,
 			"presentation": {
-				"panel": "dedicated",
 				"reveal": "never"
 			},
-			"problemMatcher": [
-				"$tsc"
-			]
-		},
-		{
-			"label": "compile:server",
-			"type": "shell",
-			"command": "npm run compile:server",
-			"group": "build",
-			"presentation": {
-				"panel": "dedicated",
-				"reveal": "never"
-			},
-			"problemMatcher": [
-				"$tsc"
-			]
-		},
-		{
-			"label": "watch",
-			"dependsOn": [
-				"watch:client",
-				"watch:server"
-			],
 			"group": {
 				"kind": "build",
 				"isDefault": true
-			},
-			"problemMatcher": []
-		},
-		{
-			"label": "watch:client",
-			"type": "shell",
-			"command": "npm run watch:client",
-			"isBackground": true,
-			"group": "build",
-			"presentation": {
-				"panel": "dedicated",
-				"reveal": "never"
-			},
-			"problemMatcher": [
-				"$tsc-watch"
-			]
-		},
-		{
-			"label": "watch:server",
-			"type": "shell",
-			"command": "npm run watch:server",
-			"isBackground": true,
-			"group": "build",
-			"presentation": {
-				"panel": "dedicated",
-				"reveal": "never"
-			},
-			"problemMatcher": [
-				"$tsc-watch"
-			]
+			}
 		}
 	]
 }
