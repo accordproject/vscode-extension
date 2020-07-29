@@ -1,10 +1,4 @@
+out
 node_modules
-*.vsix
-.DS_Store
-client/.vscode-test/**
-client/out/
-.nyc_output/
-
-
-# windows junk
-thumbs.db
+client/server
+.vscode-test

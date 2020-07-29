@@ -16,8 +16,12 @@
 
 import {
 	createConnection, TextDocuments, ProposedFeatures, TextDocumentSyncKind,
-	Diagnostic, DiagnosticSeverity, TextDocument
+	Diagnostic, DiagnosticSeverity
 } from 'vscode-languageserver';
+
+import {
+	TextDocument
+} from 'vscode-languageserver-textdocument';
 
 import * as glob from 'glob';
 import * as fs from 'fs';
@@ -37,7 +41,7 @@ const util = require('util');
 let connection = createConnection(ProposedFeatures.all);
 
 // Create a manager for open text documents
-let documents = new TextDocuments();
+let documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 
 // The workspace folder this server is operating on
 let workspaceFolder: string;

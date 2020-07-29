@@ -1,0 +1,151 @@
+{
+	"name": "cicero-vscode-extension",
+	"description": "Cicero VSCode extension",
+	"author": "Accord Project",
+	"license": "Apache-2.0",
+	"version": "0.21.2",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/accordproject/cicero-vscode-extension"
+	},
+	"publisher": "accordproject",
+	"categories": [
+		"Programming Languages",
+		"Snippets"
+	],
+	"keywords": [
+		"multi-root ready",
+		"accord project",
+		"legal",
+		"cicero",
+		"templates"
+	],
+	"engines": {
+		"vscode": "^1.43.0"
+	},
+	"activationEvents": [
+		"onLanguage:ergo",
+		"onLanguage:concerto",
+		"onLanguage:ciceroMark",
+		"onLanguage:markdown",
+		"onCommand:cicero-vscode-extension.exportArchive",
+		"onCommand:cicero-vscode-extension.downloadModels"
+	],
+	"main": "./client/out/extension",
+	"contributes": {
+		"languages": [
+			{
+				"id": "ergo",
+				"aliases": [
+					"Ergo",
+					"ergo"
+				],
+				"extensions": [
+					".ergo"
+				],
+				"configuration": "./client/ergo.language-configuration.json"
+			},
+			{
+				"id": "ciceroMark",
+				"aliases": [
+					"CiceroMark"
+				],
+				"extensions": [
+					".tem.md"
+				],
+				"configuration": "./client/ciceroMark.language-configuration.json"
+			},
+			{
+				"id": "concerto",
+				"aliases": [
+					"Concerto model",
+					"concerto"
+				],
+				"extensions": [
+					".cto"
+				],
+				"configuration": "./client/concerto.language-configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "ergo",
+				"scopeName": "source.ergo",
+				"path": "./client/syntaxes/ergo.tmLanguage.json"
+			},
+			{
+				"language": "ciceroMark",
+				"scopeName": "source.ciceroMark",
+				"path": "./client/syntaxes/ciceroMark.tmLanguage.json"
+			},
+			{
+				"language": "concerto",
+				"scopeName": "source.concerto",
+				"path": "./client/syntaxes/concerto.tmLanguage.json"
+			}
+		],
+		"snippets": [
+			{
+				"language": "concerto",
+				"path": "./client/snippets/concerto.json"
+			},
+			{
+				"language": "ergo",
+				"path": "./client/snippets/ergo.json"
+			}
+		],
+		"commands": [
+			{
+				"command": "cicero-vscode-extension.exportArchive",
+				"title": "Export Cicero Archive",
+				"category": "Accord Project"
+			},
+			{
+				"command": "cicero-vscode-extension.downloadModels",
+				"title": "Download External Models",
+				"category": "Accord Project"
+			}
+		],
+		"menus": {
+			"explorer/context": [
+				{
+					"when": "explorerResourceIsFolder",
+					"command": "cicero-vscode-extension.exportArchive",
+					"group": "AccordProject@1"
+				},
+				{
+					"when": "explorerResourceIsFolder",
+					"command": "cicero-vscode-extension.downloadModels",
+					"group": "AccordProject@2"
+				}
+			],
+			"commandPalette": [
+				{
+					"command": "cicero-vscode-extension.exportArchive",
+					"when": "false"
+				},
+				{
+					"command": "cicero-vscode-extension.downloadModels",
+					"when": "false"
+				}
+			]
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"package:vsix": "node ./node_modules/vsce/out/vsce package",
+		"compile": "tsc -b",
+		"watch": "tsc -b -w",
+		"postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
+		"test": "sh ./scripts/e2e.sh"
+	},
+	"devDependencies": {
+		"@types/mocha": "^7.0.2",
+		"mocha": "^8.0.1",
+		"@types/node": "^12.12.0",
+		"eslint": "^6.4.0",
+		"@typescript-eslint/parser": "^2.3.0",
+		"typescript": "^3.9.4",
+		"vsce": "^1.77.0"
+	}
+}

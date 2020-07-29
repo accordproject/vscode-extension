@@ -20,6 +20,8 @@ import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } f
 
 import { exportArchive, downloadModels } from './commandHandlers';
 
+let client: LanguageClient;
+
 export function activate(context: vscode.ExtensionContext) {
 
 	// HACK - set the process.browser variable so that the Concerto
@@ -30,7 +32,8 @@ export function activate(context: vscode.ExtensionContext) {
 	(process as any).browser = true;
 
 	// The server is implemented in node
-	let serverModule = context.asAbsolutePath(path.join('server/src', 'server.js'));
+	let serverModule = context.asAbsolutePath(path.join('server', 'out', 'server.js'));	
+	
 	// The debug options for the server
 	let debugOptions = { execArgv: ["--nolazy", "--inspect=6009"] };
 	
@@ -58,16 +61,27 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	};
 	
-	// Create the language client and start the client.
-	let disposable = new LanguageClient('Cicero', 'Cicero', serverOptions, clientOptions).start();
-
 	// Register commands
 	context.subscriptions.push(vscode.commands
 		.registerCommand('cicero-vscode-extension.exportArchive', exportArchive));
 	context.subscriptions.push(vscode.commands
 		.registerCommand('cicero-vscode-extension.downloadModels', downloadModels));
+
+	// Create the language client and start the client.
+	client = new LanguageClient(
+		'Cicero',
+		'Cicero',
+		serverOptions,
+		clientOptions
+	);
+
+	// Start the client. This will also launch the server
+	client.start();
+}
 	
-	// Push the disposable to the context's subscriptions so that the 
-	// client can be deactivated on extension deactivation
-	context.subscriptions.push(disposable);
+export function deactivate(): Thenable<void> | undefined {
+	if (!client) {
+		return undefined;
+	}
+	return client.stop();
 }
