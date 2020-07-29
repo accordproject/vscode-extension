@@ -15,13 +15,35 @@
 
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-// import { Template } from '@accordproject/cicero-core';
+import * as path from 'path';
 
 export async function exportArchive(file: vscode.Uri) {
-	// const template = await Template.fromDirectory(file.path);
-	// const archive = await template.toArchive();
-	// const outputPath = `${file.path}/${template.getIdentifier()}.cta`;
-	// fs.writeFileSync(outputPath, archive);
-	// vscode.window.showInformationMessage(`Created archive ${outputPath}`);
-	vscode.window.showInformationMessage(`Coming soon...`);
+	try {
+		// HACK - we load the module lazily so that process.browser is set 
+		// (see extension.ts)
+		const Template = require('@accordproject/cicero-core').Template;
+		const template = await Template.fromDirectory(file.path);
+		const archive = await template.toArchive('cicero');
+		const outputPath = path.join(file.path, `${template.getIdentifier()}.cta`);
+		fs.writeFileSync(outputPath, archive);
+		vscode.window.showInformationMessage(`Created archive ${outputPath}`);	
+	}
+	catch(error) {
+		vscode.window.showErrorMessage(`Error ${error}`);
+	}
+}
+
+export async function downloadModels(file: vscode.Uri) {
+	try {
+		// HACK - we load the module lazily so that process.browser is set 
+		// (see extension.ts)
+		const Template = require('@accordproject/cicero-core').Template;
+		const template = await Template.fromDirectory(file.path);
+		const outputPath = path.join(file.path, 'model');
+		template.getModelManager().writeModelsToFileSystem(outputPath);
+		vscode.window.showInformationMessage(`Downloaded models to ${outputPath}`);
+	}
+	catch(error) {
+		vscode.window.showErrorMessage(`Error ${error}`);
+	}
 }
