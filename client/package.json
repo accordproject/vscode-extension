@@ -39,14 +39,16 @@
 	},
 	"dependencies": {
 		"@accordproject/cicero-core": "^0.21.0",
-		"@accordproject/concerto-core": "^0.82.7",
+		"@accordproject/concerto-core": "^0.82.8",
 		"vscode-languageclient": "^4.4.2"
 	},
 	"activationEvents": [
 		"onLanguage:ergo",
 		"onLanguage:concerto",
 		"onLanguage:ciceroMark",
-		"onLanguage:markdown"
+		"onLanguage:markdown",
+		"onCommand:cicero-vscode-extension.exportArchive",
+		"onCommand:cicero-vscode-extension.downloadModels"
 	],
 	"main": "./out/extension.js",
 	"categories": [
@@ -120,6 +122,11 @@
 				"command": "cicero-vscode-extension.exportArchive",
 				"title": "Export Cicero Archive",
 				"category": "Accord Project"
+			},
+			{
+				"command": "cicero-vscode-extension.downloadModels",
+				"title": "Download External Models",
+				"category": "Accord Project"
 			}
 		],
 		"menus": {
@@ -128,12 +135,21 @@
 					"when": "explorerResourceIsFolder",
 					"command": "cicero-vscode-extension.exportArchive",
 					"group": "AccordProject@1"
+				},
+				{
+					"when": "explorerResourceIsFolder",
+					"command": "cicero-vscode-extension.downloadModels",
+					"group": "AccordProject@2"
 				}
 			],
 			"commandPalette": [
 				{
 					"command": "cicero-vscode-extension.exportArchive",
-					"when": "explorerResourceIsFolder"
+					"when": "false"
+				},
+				{
+					"command": "cicero-vscode-extension.downloadModels",
+					"when": "false"
 				}
 			]
 		}

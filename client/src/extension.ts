@@ -18,9 +18,16 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
 
-import { exportArchive } from './commandHandlers';
+import { exportArchive, downloadModels } from './commandHandlers';
 
 export function activate(context: vscode.ExtensionContext) {
+
+	// HACK - set the process.browser variable so that the Concerto
+	// logger doesn't try to create log files. The node.js process created
+	// for the Electron app doesn't seem to have a cwd so Concerto tries
+	// to create logs in the file system root, which will fail, causing
+	// the module to fail to log, which crashes the extension
+	(process as any).browser = true;
 
 	// The server is implemented in node
 	let serverModule = context.asAbsolutePath(path.join('server/src', 'server.js'));
@@ -55,8 +62,10 @@ export function activate(context: vscode.ExtensionContext) {
 	let disposable = new LanguageClient('Cicero', 'Cicero', serverOptions, clientOptions).start();
 
 	// Register commands
-	const command = 'cicero-vscode-extension.exportArchive';
-	context.subscriptions.push(vscode.commands.registerCommand(command, exportArchive));
+	context.subscriptions.push(vscode.commands
+		.registerCommand('cicero-vscode-extension.exportArchive', exportArchive));
+	context.subscriptions.push(vscode.commands
+		.registerCommand('cicero-vscode-extension.downloadModels', downloadModels));
 	
 	// Push the disposable to the context's subscriptions so that the 
 	// client can be deactivated on extension deactivation

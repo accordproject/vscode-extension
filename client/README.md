@@ -26,6 +26,8 @@ Accord Project source code files are made available under the Apache License, Ve
 
 - Upgrade to Cicero 0.21
 - Enabled validation of grammar.tem.md and sample.mnd files
+- Added a command to export Cicero Template Archive (CTA) file (context click on folder)
+- Added a command to download external models (context click on folder)
 
 ### 0.20.16
 
