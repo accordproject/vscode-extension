@@ -1,9 +1,11 @@
 {
 	"name": "cicero-vscode-extension",
-	"description": "Cicero VSCode extension",
+	"displayName": "Accord Project",
+	"description": "Accord Project extension for Visual Studio Code, providing tools for template development.",
 	"author": "Accord Project",
 	"license": "Apache-2.0",
-	"version": "0.21.2",
+	"version": "0.21.3",
+	"icon": "icon.png",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/accordproject/cicero-vscode-extension"
