@@ -28,13 +28,11 @@ If you want to use this plugin:
 
 The extension is available from the Visual Studio Marketplace at https://marketplace.visualstudio.com/items?itemName=accordproject.cicero-vscode-extension
 
-## Snippets
+### Concerto Snippets
 
-### For Concerto
+The extention adds snippets for the following elements of the Concerto language.
 
-We provide snippets generation for all the class method present in the Concerto languages.
-
-| Classes     |   Prefix    |
+| Element     |   Prefix    |
 | :---------- | :---------: |
 | Asset       |    asset    |
 | Participant | participant |
@@ -42,9 +40,19 @@ We provide snippets generation for all the class method present in the Concerto 
 | Concept     |   concept   |
 | Enum        |    enum     |
 
-## For Contributors
+### Ergo Snippets
 
-### Structure
+The extention adds snippets for the following elements of the Ergo language.
+
+| Element     |   Prefix    |
+| :---------- | :---------: |
+| Clause      |   clause    |
+| Contract    | contract    |
+
+
+## Contributors
+
+### Code Structure
 
 ```
 .
