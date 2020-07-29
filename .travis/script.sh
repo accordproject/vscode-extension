@@ -17,8 +17,6 @@
 set -ev
 set -o pipefail
 
-cd ./client
-
 npm run package:vsix
 npm install -g vsce
 

@@ -19,7 +19,6 @@ set -o pipefail
 
 # Grab the current root directory
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
-cd ${DIR}/client
 
 # check that this is the right node.js version
 if [ "${TRAVIS_NODE_VERSION}" != "" -a "${TRAVIS_NODE_VERSION}" != "12" ]; then
