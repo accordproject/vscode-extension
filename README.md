@@ -39,6 +39,15 @@ The extention adds snippets for the following elements of the Concerto language.
 | Transaction | transaction |
 | Concept     |   concept   |
 | Enum        |    enum     |
+| Event       |    event    |
+| Namespace   |   namespace |
+| Import      |    import   |
+| String      |    string   |
+| Double      |    double   |
+| Integer     |    int      |
+| Long        |    long     |
+| DateTime    |    date     |
+| Boolean     |    bool     |
 
 ### Ergo Snippets
 
@@ -48,7 +57,6 @@ The extention adds snippets for the following elements of the Ergo language.
 | :---------- | :---------: |
 | Clause      |   clause    |
 | Contract    | contract    |
-
 
 ## Contributors
 
