@@ -28,7 +28,6 @@ suite('Extension Tests', () => {
     workspace.openTextDocument(uri).then((document) => {
       assert.equal(document.languageId, 'ergo');
       assert.ok(document.lineCount === 41);
-
     });
   });
 
@@ -38,7 +37,6 @@ suite('Extension Tests', () => {
     workspace.openTextDocument(uri).then((document) => {
       assert.equal(document.languageId, 'concerto');
       assert.ok(document.lineCount === 5);
-
     });
   });
 
@@ -48,18 +46,22 @@ suite('Extension Tests', () => {
     workspace.openTextDocument(uri).then((document) => {
       assert.equal(document.languageId, 'ciceroMark');
       assert.ok(document.lineCount === 4);
-
     });
   });
 
   test('should execute exportArchive command', () => {
     const uri = vscode.Uri.file(path.join(rootPath, '../test/data/valid/template/acceptance-of-delivery'));
-    return vscode.commands.executeCommand('cicero-vscode-extension.exportArchive', uri);
+    
+    vscode.commands.executeCommand('cicero-vscode-extension.exportArchive', uri).then((result) => {
+      assert.ok(result);
+    });
   });
 
   test('should execute downloadModels command', () => {
     const uri = vscode.Uri.file(path.join(rootPath, '../test/data/valid/template/acceptance-of-delivery'));
-    return vscode.commands.executeCommand('cicero-vscode-extension.downloadModels', uri);
-  });
 
+    vscode.commands.executeCommand('cicero-vscode-extension.downloadModels', uri).then((result) => {
+      assert.ok(result);
+    });
+  });
 });
