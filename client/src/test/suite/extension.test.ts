@@ -21,10 +21,8 @@ import { workspace } from 'vscode';
 suite('Extension Tests', () => {
   const rootPath = path.dirname(__dirname);
 
-  // open a cto document should return the expected document id and line count
+  // open an ergo document should return the expected document id and line count
   test('activate should return a ergo document when open a ergo file', () => {
-
-    // const rootPath = path.dirname(__dirname);
     const uri = vscode.Uri.file(path.join(rootPath, '../test/data/valid/ergo/logic.ergo'));
 
     workspace.openTextDocument(uri).then((document) => {
@@ -32,6 +30,36 @@ suite('Extension Tests', () => {
       assert.ok(document.lineCount === 41);
 
     });
+  });
+
+  test('activate should return a cto document when open a cto file', () => {
+    const uri = vscode.Uri.file(path.join(rootPath, '../test/data/valid/cto/model.cto'));
+
+    workspace.openTextDocument(uri).then((document) => {
+      assert.equal(document.languageId, 'concerto');
+      assert.ok(document.lineCount === 5);
+
+    });
+  });
+
+  test('activate should return a ciceroMark document when open a .tem.md file', () => {
+    const uri = vscode.Uri.file(path.join(rootPath, '../test/data/valid/ciceroMark/grammar.tem.md'));
+
+    workspace.openTextDocument(uri).then((document) => {
+      assert.equal(document.languageId, 'ciceroMark');
+      assert.ok(document.lineCount === 4);
+
+    });
+  });
+
+  test('should execute exportArchive command', () => {
+    const uri = vscode.Uri.file(path.join(rootPath, '../test/data/valid/template/acceptance-of-delivery'));
+    return vscode.commands.executeCommand('cicero-vscode-extension.exportArchive', uri);
+  });
+
+  test('should execute downloadModels command', () => {
+    const uri = vscode.Uri.file(path.join(rootPath, '../test/data/valid/template/acceptance-of-delivery'));
+    return vscode.commands.executeCommand('cicero-vscode-extension.downloadModels', uri);
   });
 
 });
