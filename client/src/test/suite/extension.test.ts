@@ -22,7 +22,7 @@ suite('Extension Tests', () => {
   const rootPath = path.dirname(__dirname);
 
   // open an ergo document should return the expected document id and line count
-  test('activate should return a ergo document when open a ergo file', () => {
+  test('should return a ergo document when open a ergo file', () => {
     const uri = vscode.Uri.file(path.join(rootPath, '../test/data/valid/ergo/logic.ergo'));
 
     workspace.openTextDocument(uri).then((document) => {
@@ -32,7 +32,7 @@ suite('Extension Tests', () => {
     });
   });
 
-  test('activate should return a cto document when open a cto file', () => {
+  test('should return a cto document when open a cto file', () => {
     const uri = vscode.Uri.file(path.join(rootPath, '../test/data/valid/cto/model.cto'));
 
     workspace.openTextDocument(uri).then((document) => {
@@ -42,7 +42,7 @@ suite('Extension Tests', () => {
     });
   });
 
-  test('activate should return a ciceroMark document when open a .tem.md file', () => {
+  test('should return a ciceroMark document when open a .tem.md file', () => {
     const uri = vscode.Uri.file(path.join(rootPath, '../test/data/valid/ciceroMark/grammar.tem.md'));
 
     workspace.openTextDocument(uri).then((document) => {
