@@ -14,8 +14,9 @@ Validates that Cicero templates conform to the [Accord Project Template Specific
 
 - Validates the model for the template ('.cto' files), downloading referenced external models as required
 - Validates the logic of the template ('.ergo' files)
-- Validates that the template archive can be built
 - Validates that the 'text/sample.md' file for the template can be parsed using the grammar ('text/grammar.tem.md' file)
+- Command to download model dependencies
+- Command to generate a Cicero Template Archive ('.cta') file for a template
 - Syntax highlighting for all files
 
 ## For Template Authors
@@ -105,7 +106,7 @@ npm run package:vsix
 
 Developers no longer need a manual build, once you have created a pull request from your private Github repository. The build will be automatically performed by Travis.
 A successful build will create an installable VSIX file on the build machine.
-The public release version number is defined in the Client package.json file.
+The public release version number is defined in the package.json file. The 3 package.json files should all have the same version number (root/client and server).
 
 #### Publish Release
 
