@@ -1,5 +1,9 @@
 ## Change Log
 
+### 0.21.5
+
+- Updated the README
+
 ### 0.21.4
 
 - Fixed packaging issue with export CTA and download models commands

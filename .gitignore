@@ -4,4 +4,4 @@ node_modules
 log
 client/out
 server/out
-
+.DS_Store
