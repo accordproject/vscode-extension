@@ -54,3 +54,31 @@ export async function downloadModels(file: vscode.Uri) {
 
 	return false;
 }
+
+export async function exportClassDiagram(file: vscode.Uri) {
+	try {
+		// HACK - we load the module lazily so that process.browser is set 
+		// (see extension.ts)
+		const outputPath = path.join(file.path, 'model');
+		const Template = require('@accordproject/cicero-core').Template;
+		const template = await Template.fromDirectory(file.path);
+		const modelManager = template.getModelManager();
+
+		const CodeGen = require('@accordproject/concerto-tools').CodeGen;
+		const PlantUMLVisitor = CodeGen.PlantUMLVisitor;
+		const FileWriter = require('@accordproject/concerto-tools'). FileWriter;
+
+		const visitor = new PlantUMLVisitor();
+		let parameters = {} as any;
+		parameters.fileWriter = new FileWriter( outputPath );
+
+		modelManager.accept(visitor, parameters);
+		vscode.window.showInformationMessage(`Exported class diagram to ${outputPath}`);
+		return true;
+	}
+	catch(error) {
+		vscode.window.showErrorMessage(`Error ${error}`);
+	}
+
+	return false;
+}

@@ -64,4 +64,12 @@ suite('Extension Tests', () => {
       assert.ok(result);
     });
   });
+
+  test('should execute exportClassDiagram command', () => {
+    const uri = vscode.Uri.file(path.join(rootPath, '../test/data/valid/template/acceptance-of-delivery'));
+
+    vscode.commands.executeCommand('cicero-vscode-extension.exportClassDiagram', uri).then((result) => {
+      assert.ok(result);
+    });
+  });
 });

@@ -4,7 +4,7 @@
 	"description": "Accord Project extension for Visual Studio Code, providing tools for template development.",
 	"author": "Accord Project",
 	"license": "Apache-2.0",
-	"version": "0.21.5",
+	"version": "0.21.6",
 	"icon": "icon.png",
 	"repository": {
 		"type": "git",
@@ -31,7 +31,8 @@
 		"onLanguage:ciceroMark",
 		"onLanguage:markdown",
 		"onCommand:cicero-vscode-extension.exportArchive",
-		"onCommand:cicero-vscode-extension.downloadModels"
+		"onCommand:cicero-vscode-extension.downloadModels",
+		"onCommand:cicero-vscode-extension.viewClassDiagram"
 	],
 	"main": "./client/out/extension",
 	"contributes": {
@@ -106,6 +107,11 @@
 				"command": "cicero-vscode-extension.downloadModels",
 				"title": "Download External Models",
 				"category": "Accord Project"
+			},
+			{
+				"command": "cicero-vscode-extension.exportClassDiagram",
+				"title": "Export Class Diagram",
+				"category": "Accord Project"
 			}
 		],
 		"menus": {
@@ -119,6 +125,11 @@
 					"when": "explorerResourceIsFolder",
 					"command": "cicero-vscode-extension.downloadModels",
 					"group": "AccordProject@2"
+				},
+				{
+					"when": "explorerResourceIsFolder",
+					"command": "cicero-vscode-extension.exportClassDiagram",
+					"group": "AccordProject@3"
 				}
 			],
 			"commandPalette": [
@@ -128,6 +139,10 @@
 				},
 				{
 					"command": "cicero-vscode-extension.downloadModels",
+					"when": "false"
+				},
+				{
+					"command": "cicero-vscode-extension.exportClassDiagram",
 					"when": "false"
 				}
 			]

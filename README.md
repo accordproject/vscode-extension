@@ -26,10 +26,18 @@ Please visit the [Visual Studio Code Marketplace](https://marketplace.visualstud
 - Develop the logic for templates using the Ergo domain specific language
 - Write the natural language text for templates using the CiceroMark extended markdown syntax
 - Run unit tests for templates using the Cucumber BDD testing framework
-- Work offline by downloading data model dependencies
-- Package templates into Cicero Template Archive (cta) files
 - Syntax highlighting for all files
 - Compilation and problem markers
+
+### Commands
+
+- Work offline by downloading data model dependencies (context-click on root folder)
+- Package templates into Cicero Template Archive (cta) files (context-click on root folder)
+- Generate PlantUML class diagram (context-click on root folder)
+
+### Quick Fixes
+
+- Add a variable to the template model is an undeclared variable is used in `grammar.tem.md`. _Note that the `model.cto` file must be open for the quick fix to be available._
 
 ### Concerto Snippets
 

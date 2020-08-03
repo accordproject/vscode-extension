@@ -16,7 +16,10 @@
 
 import {
 	createConnection, TextDocuments, ProposedFeatures, TextDocumentSyncKind,
-	Diagnostic, DiagnosticSeverity
+    Diagnostic, DiagnosticSeverity,
+    CodeActionKind,
+    CodeActionParams,
+    CodeAction
 } from 'vscode-languageserver';
 
 import {
@@ -34,6 +37,7 @@ import { ModelFile } from '@accordproject/concerto-core';
 import { ParserManager, TemplateMarkTransformer } from '@accordproject/markdown-template';
 import { CiceroMarkTransformer } from '@accordproject/markdown-cicero';
 import { EvalEngine } from '@accordproject/ergo-engine/index.browser.js';
+import { quickfix } from './CodeActionProvider';
 
 const util = require('util');
 
@@ -51,6 +55,19 @@ const FULL_RANGE = {
     start: { line: 0, character: 0 },
     end:  { line: 0, character: 0 },
 };
+
+/**
+ * A cache of LogicManager/template instances. The keys are the root folder names.
+ * Values have a logicManager, parserManager, templateModel and data properties
+ */
+const templateCache = {};
+
+function getTemplateModel(parentDir) {
+    const entry = templateCache[parentDir];
+    if(entry) {
+        return entry.templateModel;
+    }
+}
 
 /**
  * Gets the root file path for a template, from a path under the root, by walking
@@ -88,6 +105,43 @@ function getTemplateRoot(pathStr, textDocument, diagnosticMap) {
 }
 
 /**
+ * Gets an open document by path
+ * @param path the path to the file
+ * @returns {TextDocument} the open text document or null
+ */
+function getDocument(path) {
+    const key = 'file://' + path;
+    return documents.get(key);
+}
+
+/**
+ * Finds the asset declaration in the model manager for a clause or contract
+ * @param modelManager the modelManager
+ * @returns {*} class declaration for the template model, or null
+ */
+function findTemplateModel(modelManager) {
+    const assets = modelManager.getAssetDeclarations();
+    const templateModels = assets.filter(asset => {
+        const superTypes = asset.getAllSuperTypeDeclarations()
+        const found = superTypes.filter( superType => {
+            const fqn = superType.getFullyQualifiedName();
+            connection.console.log(`- fqn ${fqn}`);
+            return fqn === 'org.accordproject.cicero.contract.AccordClause' ||
+                fqn === 'org.accordproject.cicero.contract.AccordContract';
+        });
+
+        return (found.length > 0);
+    });
+
+    if(templateModels.length > 0) {
+        return templateModels[0];
+    }
+    else {
+        return null;
+    }
+}
+
+/**
  * Returns the contents of a file from disk, or if the file
  * has been opened for editing, then the edited contents is returned.
  * @param file the path to the file
@@ -95,8 +149,7 @@ function getTemplateRoot(pathStr, textDocument, diagnosticMap) {
  */
 function getEditedFileContents(file) {
 
-    const key = 'file://' + file;
-    const document = documents.get(key);
+    const document = getDocument(file);
 
     // connection.console.log(`Getting ${key}`)
 
@@ -209,10 +262,50 @@ connection.onInitialize((params) => {
 			textDocumentSync: {
 				openClose: true,
 				change: TextDocumentSyncKind.Full
-			}
+            },
+            codeActionProvider : {
+                codeActionKinds: [CodeActionKind.QuickFix]
+            }
 		}
 	}
 });
+
+connection.onCodeAction(provideCodeActions);
+
+async function provideCodeActions(params: CodeActionParams): Promise<CodeAction[]> {
+    connection.console.log(`*** provideCodeActions ${params.textDocument.uri}`);
+
+    if (!params.context.diagnostics.length) {
+        return [];
+    }
+    const textDocument = documents.get(params.textDocument.uri);
+    if (!textDocument) {
+        return []; 
+    }
+
+    const pathStr = path.resolve(fileUriToPath(textDocument.uri));
+    const diagnosticMap = {
+    }
+    const parentDir = getTemplateRoot(pathStr, textDocument, diagnosticMap);
+    connection.console.log(`- template root: ${parentDir}`);
+
+    const modelFilePath = parentDir + '/model/model.cto';
+    connection.console.log(`- modelFilePath: ${modelFilePath}`);
+
+    const modelDocument = getDocument(modelFilePath);
+    if (!modelDocument) {
+        return [];
+    }
+
+    connection.console.log(`- model document: ${modelDocument}`);
+
+    const templateModel = getTemplateModel(parentDir);
+
+    if (!templateModel) {
+        return [];
+    }
+    return quickfix(connection, templateModel, modelDocument, params);
+}
 
 /**
  * The content of a text document has changed. This event is emitted
@@ -243,13 +336,6 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
          */
         const diagnosticMap = {
         }
-
-        /**
-         * A cache of LogicManager/template instances. The keys are the root folder names.
-         * Values have a logicManager, parserManager and data properties
-         */
-        const templateCache = {};
-
         // this will assemble all the models into a ModelManager
         // and validate - so it needs to always run before we do anything else
         const modelValid = await validateModels(textDocument, diagnosticMap, templateCache);
@@ -345,10 +431,11 @@ async function validateModels(textDocument: TextDocument, diagnosticMap, templat
 
         // get the template logic from cache
         const logicManager = new LogicManager('cicero');
-        templateCache[parentDir] = {
+        const cacheEntry = templateCache[parentDir] = {
             logicManager,
             parserManager: null,
-            data: null
+            data: null,
+            templateModel : null
         }
         
         const modelManager = logicManager.getModelManager();
@@ -383,6 +470,8 @@ async function validateModels(textDocument: TextDocument, diagnosticMap, templat
                 modelManager.validateModelFiles();
                 pushDiagnostic(DiagnosticSeverity.Warning, textDocument, err, 'model', diagnosticMap);
             }
+
+            cacheEntry.templateModel = findTemplateModel(modelManager);
             return true;
         }
         catch(error) {

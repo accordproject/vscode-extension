@@ -1,5 +1,10 @@
 ## Change Log
 
+### 0.21.6
+
+- Added a command to export the PlantUML class diagram
+- Added a quick fix to add a variable to the template model if an undeclared variable is used in the grammar
+
 ### 0.21.5
 
 - Updated the README

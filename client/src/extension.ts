@@ -18,7 +18,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
 
-import { exportArchive, downloadModels } from './commandHandlers';
+import { exportArchive, downloadModels, exportClassDiagram } from './commandHandlers';
 
 let client: LanguageClient;
 
@@ -66,6 +66,8 @@ export function activate(context: vscode.ExtensionContext) {
 		.registerCommand('cicero-vscode-extension.exportArchive', exportArchive));
 	context.subscriptions.push(vscode.commands
 		.registerCommand('cicero-vscode-extension.downloadModels', downloadModels));
+	context.subscriptions.push(vscode.commands
+		.registerCommand('cicero-vscode-extension.exportClassDiagram', exportClassDiagram));
 
 	// Create the language client and start the client.
 	client = new LanguageClient(
