@@ -1,5 +1,9 @@
 ## Change Log
 
+### 0.21.8
+
+- Support triggering templates without a `state.json` file
+
 ### 0.21.7
 
 - Added trigger command

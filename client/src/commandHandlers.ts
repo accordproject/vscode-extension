@@ -116,13 +116,6 @@ export async function triggerClause(file: vscode.Uri) {
 			return false;
 		}
 
-		const statePath = path.join(file.path, 'state.json');
-
-		if(!fs.existsSync(statePath)) {
-			vscode.window.showErrorMessage('Cannot trigger: /state.json file was not found.');
-			return false;
-		}
-
 		const sampleText = fs.readFileSync( samplePath, 'utf8');
 		clause.parse(sampleText);
 		const parseResult = clause.getData();
@@ -144,14 +137,22 @@ export async function triggerClause(file: vscode.Uri) {
 		outputChannel.appendLine( JSON.stringify(request, null, 2) );
 		outputChannel.appendLine( '' );
 
-		const state = JSON.parse(fs.readFileSync( requestPath, 'utf8'));
+		const statePath = path.join(file.path, 'state.json');
+		const engine = new Engine();
+		let state = null;
+
+		if(!fs.existsSync(statePath)) {
+			const initResult = await engine.init(clause, null);
+			state = initResult.state;
+		} else {
+			state = JSON.parse(fs.readFileSync( statePath, 'utf8'));
+		}
 
 		outputChannel.appendLine( 'state.json' );
 		outputChannel.appendLine( '==========' );
 		outputChannel.appendLine( JSON.stringify(state, null, 2) );
 		outputChannel.appendLine( '' );	
 
-		const engine = new Engine();
 		const result = await engine.trigger(clause, request, state, null );
 
 		outputChannel.appendLine( 'response' );
