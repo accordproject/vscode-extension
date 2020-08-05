@@ -22,11 +22,11 @@ Please visit the [Visual Studio Code Marketplace](https://marketplace.visualstud
 
 ## Features
 
-- Create data models for templates using the Concerto modelling language
-- Develop the logic for templates using the Ergo domain specific language
-- Write the natural language text for templates using the CiceroMark extended markdown syntax
-- Run unit tests for templates using the Cucumber BDD testing framework
-- Trigger templates
+- Create data models for templates using the [Concerto](https://docs.accordproject.org/docs/model-concerto.html) modelling language
+- Develop the logic for templates using the [Ergo](https://docs.accordproject.org/docs/logic-ergo.html) domain specific language
+- Write the natural language text for templates using the [CiceroMark](https://docs.accordproject.org/docs/markup-cicero.html) extended markdown syntax
+- Run unit tests for templates using the [Cucumber](https://cucumber.io) BDD testing framework
+- Trigger templates (send them data and view the results)
 - Syntax highlighting for all files
 - Compilation and problem markers
 
@@ -39,7 +39,7 @@ Please visit the [Visual Studio Code Marketplace](https://marketplace.visualstud
 
 ### Quick Fixes
 
-- Add a variable to the template model is an undeclared variable is used in `grammar.tem.md`. _Note that the `model.cto` file must be open for the quick fix to be available._
+- Add a variable to the template model if an undeclared variable is used in `grammar.tem.md`. _Note that the `model.cto` file must be open for the quick fix to be available._
 
 ### Concerto Snippets
 
