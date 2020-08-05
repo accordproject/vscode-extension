@@ -26,6 +26,7 @@ Please visit the [Visual Studio Code Marketplace](https://marketplace.visualstud
 - Develop the logic for templates using the Ergo domain specific language
 - Write the natural language text for templates using the CiceroMark extended markdown syntax
 - Run unit tests for templates using the Cucumber BDD testing framework
+- Trigger templates
 - Syntax highlighting for all files
 - Compilation and problem markers
 
@@ -34,6 +35,7 @@ Please visit the [Visual Studio Code Marketplace](https://marketplace.visualstud
 - Work offline by downloading data model dependencies (context-click on root folder)
 - Package templates into Cicero Template Archive (cta) files (context-click on root folder)
 - Generate PlantUML class diagram (context-click on root folder)
+- Trigger a template, parsing data from sample.md and passing in `request.json` and `state.json` (context-click on root folder)
 
 ### Quick Fixes
 

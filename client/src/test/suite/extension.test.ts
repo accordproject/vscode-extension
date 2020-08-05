@@ -72,4 +72,13 @@ suite('Extension Tests', () => {
       assert.ok(result);
     });
   });
+
+  test('should execute triggerClause command', () => {
+    const uri = vscode.Uri.file(path.join(rootPath, '../test/data/valid/template/acceptance-of-delivery'));
+
+    vscode.commands.executeCommand('cicero-vscode-extension.triggerClause', uri).then((result) => {
+      assert.ok(result);
+    });
+  });
+
 });

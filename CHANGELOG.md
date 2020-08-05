@@ -1,5 +1,10 @@
 ## Change Log
 
+### 0.21.7
+
+- Added trigger command
+- Registered markdown-it extensions with markdown preview (wip)
+
 ### 0.21.6
 
 - Added a command to export the PlantUML class diagram

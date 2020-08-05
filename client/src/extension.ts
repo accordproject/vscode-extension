@@ -18,7 +18,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
 
-import { exportArchive, downloadModels, exportClassDiagram } from './commandHandlers';
+import { exportArchive, downloadModels, exportClassDiagram, triggerClause, setOutputChannel } from './commandHandlers';
 
 let client: LanguageClient;
 
@@ -54,13 +54,17 @@ export function activate(context: vscode.ExtensionContext) {
 			{scheme: 'file', language: 'markdown', pattern: '**/sample*.md'}
 		],
 		synchronize: {
-			// Synchronize the setting section 'languageServerExample' to the server
+			// Synchronize the setting section 'Cicero' to the server
 			configurationSection: 'Cicero',
 			// Notify the server about file changes to '.clientrc files contain in the workspace
 			fileEvents: vscode.workspace.createFileSystemWatcher('**/.clientrc')
 		}
 	};
-	
+
+	// create the output channel
+	const outputChannel = vscode.window.createOutputChannel('Cicero');
+	setOutputChannel(outputChannel);
+
 	// Register commands
 	context.subscriptions.push(vscode.commands
 		.registerCommand('cicero-vscode-extension.exportArchive', exportArchive));
@@ -68,17 +72,27 @@ export function activate(context: vscode.ExtensionContext) {
 		.registerCommand('cicero-vscode-extension.downloadModels', downloadModels));
 	context.subscriptions.push(vscode.commands
 		.registerCommand('cicero-vscode-extension.exportClassDiagram', exportClassDiagram));
-
+		context.subscriptions.push(vscode.commands
+			.registerCommand('cicero-vscode-extension.triggerClause', triggerClause));
+	
 	// Create the language client and start the client.
 	client = new LanguageClient(
-		'Cicero',
-		'Cicero',
+		'cicero',
+		'Cicero Language Server',
 		serverOptions,
 		clientOptions
 	);
 
 	// Start the client. This will also launch the server
 	client.start();
+
+	// extend markdown preview
+	return {
+		extendMarkdownIt(md) {
+			return md.use(require('@accordproject/markdown-it-template'))
+				.use(require('@accordproject/markdown-it-cicero'))
+		}
+	}
 }
 	
 export function deactivate(): Thenable<void> | undefined {
