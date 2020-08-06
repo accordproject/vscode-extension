@@ -1,5 +1,9 @@
 ## Change Log
 
+### 0.21.9
+
+- HTML preview for template markdown text
+
 ### 0.21.8
 
 - Support triggering templates without a `state.json` file

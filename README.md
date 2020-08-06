@@ -12,7 +12,7 @@
 
 The Accord Project extension helps developers to create, test and debug [Accord Project](https://accordproject.org) templates.
 
-For a step-by-step guide on getting started with the extension's features, access our [Beginner Tutorial](https://docs.accordproject.org). For more comprehensive documentation, [follow this link.](https://docs.accordproject.org)
+For a step-by-step guide on getting started with the extension's features, access our [VS Code Tutorial](https://docs.accordproject.org/docs/next/tutorial-vscode.html). For more comprehensive documentation, [follow this link.](https://docs.accordproject.org)
 
 ![Accord Project Extension Homepage](assets/VSCodeImage.png)
 
@@ -29,6 +29,7 @@ Please visit the [Visual Studio Code Marketplace](https://marketplace.visualstud
 - Trigger templates (send them data and view the results)
 - Syntax highlighting for all files
 - Compilation and problem markers
+- HTML preview for template markdown text
 
 ### Commands
 
@@ -36,6 +37,9 @@ Please visit the [Visual Studio Code Marketplace](https://marketplace.visualstud
 - Package templates into Cicero Template Archive (cta) files (context-click on root folder)
 - Generate PlantUML class diagram (context-click on root folder)
 - Trigger a template, parsing data from sample.md and passing in `request.json` and `state.json` (context-click on root folder)
+
+### Views
+- HTML preview for template text (open `grammar.tem.md` and then press the _Show Preview_ icon in the editor menu)
 
 ### Quick Fixes
 

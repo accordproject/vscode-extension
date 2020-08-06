@@ -16,9 +16,22 @@
 import * as path from 'path';
 
 import * as vscode from 'vscode';
-import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
+import {
+	LanguageClient,
+	LanguageClientOptions,
+	ServerOptions,
+	TransportKind
+} from 'vscode-languageclient';
 
-import { exportArchive, downloadModels, exportClassDiagram, triggerClause, setOutputChannel } from './commandHandlers';
+import {
+	exportArchive,
+	downloadModels,
+	exportClassDiagram,
+	triggerClause,
+	getWebviewContent,
+	setOutputChannel
+} from './commandHandlers';
+
 
 let client: LanguageClient;
 
@@ -32,26 +45,47 @@ export function activate(context: vscode.ExtensionContext) {
 	(process as any).browser = true;
 
 	// The server is implemented in node
-	let serverModule = context.asAbsolutePath(path.join('server', 'out', 'server.js'));	
-	
+	let serverModule = context.asAbsolutePath(path.join('server', 'out', 'server.js'));
+
 	// The debug options for the server
-	let debugOptions = { execArgv: ["--nolazy", "--inspect=6009"] };
-	
+	let debugOptions = {
+		execArgv: ["--nolazy", "--inspect=6009"]
+	};
+
 	// If the extension is launched in debug mode then the debug server options are used
 	// Otherwise the run options are used
 	let serverOptions: ServerOptions = {
-		run : { module: serverModule, transport: TransportKind.ipc },
-		debug: { module: serverModule, transport: TransportKind.ipc, options: debugOptions }
+		run: {
+			module: serverModule,
+			transport: TransportKind.ipc
+		},
+		debug: {
+			module: serverModule,
+			transport: TransportKind.ipc,
+			options: debugOptions
+		}
 	};
-	
+
 	// Options to control the language client
 	let clientOptions: LanguageClientOptions = {
 		// Register the server for documents
-		documentSelector: [
-			{scheme: 'file', language: 'ergo'}, 
-			{scheme: 'file', language: 'concerto'},
-			{scheme: 'file', language: 'ciceroMark'},
-			{scheme: 'file', language: 'markdown', pattern: '**/sample*.md'}
+		documentSelector: [{
+				scheme: 'file',
+				language: 'ergo'
+			},
+			{
+				scheme: 'file',
+				language: 'concerto'
+			},
+			{
+				scheme: 'file',
+				language: 'ciceroMark'
+			},
+			{
+				scheme: 'file',
+				language: 'markdown',
+				pattern: '**/sample*.md'
+			}
 		],
 		synchronize: {
 			// Synchronize the setting section 'Cicero' to the server
@@ -72,9 +106,54 @@ export function activate(context: vscode.ExtensionContext) {
 		.registerCommand('cicero-vscode-extension.downloadModels', downloadModels));
 	context.subscriptions.push(vscode.commands
 		.registerCommand('cicero-vscode-extension.exportClassDiagram', exportClassDiagram));
-		context.subscriptions.push(vscode.commands
-			.registerCommand('cicero-vscode-extension.triggerClause', triggerClause));
-	
+	context.subscriptions.push(vscode.commands
+		.registerCommand('cicero-vscode-extension.triggerClause', triggerClause));
+
+	let currentPanel: vscode.WebviewPanel | undefined = undefined;
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('cicero-vscode-extension.showPreview', (file: vscode.Uri) => {
+			const columnToShowIn = vscode.ViewColumn.Beside;
+
+			if (currentPanel) {
+				// If we already have a panel, show it in the target column
+				currentPanel.reveal(columnToShowIn);
+			} else {
+				// Otherwise, create a new panel
+				currentPanel = vscode.window.createWebviewPanel(
+					'cicero',
+					'Template Preview',
+					columnToShowIn, {}
+				);
+
+				currentPanel.webview.html = getWebviewContent();
+
+				// Reset when the current panel is closed
+				currentPanel.onDidDispose(
+					() => {
+						currentPanel = undefined;
+					},
+					null,
+					context.subscriptions
+				);
+
+				// update the preview when the template grammar changes
+				vscode.workspace.onDidChangeTextDocument((event) => {
+					if (event.document.languageId === 'ciceroMark') {
+						currentPanel.webview.html = getWebviewContent();;
+					}
+				});
+
+				// update the preview when the active editor changes
+				vscode.window.onDidChangeActiveTextEditor((event) => {
+					if (event.document && event.document.languageId === 'ciceroMark') {
+						currentPanel.webview.html = getWebviewContent();;
+					}
+				});
+			}
+		})
+	);
+
 	// Create the language client and start the client.
 	client = new LanguageClient(
 		'cicero',
@@ -85,17 +164,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Start the client. This will also launch the server
 	client.start();
-
-	// extend markdown preview
-	return {
-		extendMarkdownIt(md) {
-			return md.use(require('@accordproject/markdown-it-template'))
-				.use(require('@accordproject/markdown-it-cicero'))
-		}
-	}
 }
-	
-export function deactivate(): Thenable<void> | undefined {
+
+export function deactivate(): Thenable < void > | undefined {
 	if (!client) {
 		return undefined;
 	}

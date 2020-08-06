@@ -81,4 +81,9 @@ suite('Extension Tests', () => {
     });
   });
 
+  test('should execute showPreview command', () => {
+    vscode.commands.executeCommand('cicero-vscode-extension.showPreview').then((result) => {
+      assert.ok(result);
+    });
+  });
 });
