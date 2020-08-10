@@ -16,7 +16,15 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { TypeDefinitionRequest } from 'vscode-languageclient';
+const plantumlEncoder = require('plantuml-encoder');
+import MemoryWriter from './memorywriter';
+import MermaidVisitor from './mermaidvisitor';
+const Template = require('@accordproject/cicero-core').Template;
+const CodeGen = require('@accordproject/concerto-tools').CodeGen;
+const FileWriter = require('@accordproject/concerto-tools').FileWriter;
+const Clause = require('@accordproject/cicero-core').Clause;
+const Engine = require('@accordproject/cicero-engine').Engine;
+
 var md = require('markdown-it')()
 	.use(require('@accordproject/markdown-it-template'))
 	.use(require('@accordproject/markdown-it-cicero'));
@@ -29,10 +37,7 @@ export function setOutputChannel(oc : vscode.OutputChannel) {
 
 export async function exportArchive(file: vscode.Uri) {
 	try {
-		// HACK - we load the module lazily so that process.browser is set 
-		// (see extension.ts)
-		const Template = require('@accordproject/cicero-core').Template;
-		const template = await Template.fromDirectory(file.path);
+		const template = await Template.fromDirectory(file.path, {skipUpdateExternalModels: true});
 		const archive = await template.toArchive('cicero');
 		const outputPath = path.join(file.path, `${template.getIdentifier()}.cta`);
 		fs.writeFileSync(outputPath, archive);
@@ -48,9 +53,6 @@ export async function exportArchive(file: vscode.Uri) {
 
 export async function downloadModels(file: vscode.Uri) {
 	try {
-		// HACK - we load the module lazily so that process.browser is set 
-		// (see extension.ts)
-		const Template = require('@accordproject/cicero-core').Template;
 		const template = await Template.fromDirectory(file.path);
 		const outputPath = path.join(file.path, 'model');
 		template.getModelManager().writeModelsToFileSystem(outputPath);
@@ -64,24 +66,59 @@ export async function downloadModels(file: vscode.Uri) {
 	return false;
 }
 
+async function getMermaid(ctoFile: vscode.Uri) {
+	try {
+		const templateRootPath = path.resolve(ctoFile.fsPath, '..', '..');
+		const modelFileName = ctoFile.fsPath;
+		const template = await Template.fromDirectory(templateRootPath, {skipUpdateExternalModels: true});
+		const modelManager = template.getModelManager();
+		outputChannel.appendLine(`Active file: ${modelFileName}`);
+		// const modelFile = modelManager.getModelFileByFileName(modelFileName);
+
+		// modelManager.getModelFiles().forEach(modelFile => {
+		// 	outputChannel.appendLine(`- ${modelFile.getName()}`);
+		// });
+
+		// if(!modelFile) {
+		// 	vscode.window.showErrorMessage(`Error failed to find model file ${modelFileName} in the model manager.`);
+		// 	return false;
+		// }
+
+		// outputChannel.appendLine(`Found: ${modelFile.getNamespace()}`);
+
+		const visitor = new MermaidVisitor();
+		let parameters = {} as any;
+		parameters.fileWriter = new MemoryWriter();
+		const virtualFileName = 'model.mmd';
+
+		// parameters.fileWriter.openFile('model.mmd');
+        // parameters.fileWriter.writeLine(0, 'classDiagram');
+		modelManager.accept(visitor, parameters);
+		// parameters.fileWriter.closeFile();
+
+		// outputChannel.appendLine(`Result: ${JSON.stringify(parameters.fileWriter.getFiles())}`);
+
+		return parameters.fileWriter.getFiles()['/model.mmd'];
+	}
+	catch(error) {
+		vscode.window.showErrorMessage(`Error ${error}`);
+	}
+
+	return false;
+}
+
 export async function exportClassDiagram(file: vscode.Uri) {
 	try {
-		// HACK - we load the module lazily so that process.browser is set 
-		// (see extension.ts)
 		const outputPath = path.join(file.path, 'model');
-		const Template = require('@accordproject/cicero-core').Template;
-		const template = await Template.fromDirectory(file.path);
+		const template = await Template.fromDirectory(file.path, {skipUpdateExternalModels: true});
 		const modelManager = template.getModelManager();
-
-		const CodeGen = require('@accordproject/concerto-tools').CodeGen;
 		const PlantUMLVisitor = CodeGen.PlantUMLVisitor;
-		const FileWriter = require('@accordproject/concerto-tools'). FileWriter;
 
 		const visitor = new PlantUMLVisitor();
 		let parameters = {} as any;
 		parameters.fileWriter = new FileWriter( outputPath );
-
 		modelManager.accept(visitor, parameters);
+
 		vscode.window.showInformationMessage(`Exported class diagram to ${outputPath}`);
 		return true;
 	}
@@ -94,17 +131,9 @@ export async function exportClassDiagram(file: vscode.Uri) {
 
 export async function triggerClause(file: vscode.Uri) {
 	try {
-		// HACK - we load the module lazily so that process.browser is set 
-		// (see extension.ts)
 		outputChannel.show();
-
-		const Template = require('@accordproject/cicero-core').Template;
-		const Clause = require('@accordproject/cicero-core').Clause;
-		const Engine = require('@accordproject/cicero-engine').Engine;
-
-		const template = await Template.fromDirectory(file.path);
+		const template = await Template.fromDirectory(file.path, {skipUpdateExternalModels: true});
 		const clause = new Clause(template);
-
 		const samplePath = path.join(file.path, 'text', 'sample.md');
 
 		if(!fs.existsSync(samplePath)) {
@@ -172,15 +201,50 @@ export async function triggerClause(file: vscode.Uri) {
 	return false;
 }
 
+async function getHtml() {
 
-export function getWebviewContent() {
-	const html = vscode.window.activeTextEditor ? md.render(vscode.window.activeTextEditor.document.getText()) : 'To display preview please open a grammar.tem.md file.';
+	let html = 'To display preview please open a grammar.tem.md or a *.cto file.';
+
+	if(vscode.window.activeTextEditor && vscode.window.activeTextEditor.document) {
+		if(vscode.window.activeTextEditor.document.languageId === 'ciceroMark') {
+			html = md.render(vscode.window.activeTextEditor.document.getText());
+		}
+		else if (vscode.window.activeTextEditor.document.languageId === 'concerto') {
+
+			const mermaid = await getMermaid(vscode.window.activeTextEditor.document.uri);
+			if(mermaid) {
+				outputChannel.appendLine(mermaid);
+				html = `<h1>Class Diagram</h2>
+<div class="mermaid" id="mermaid-main">
+${mermaid}
+</div>
+<div class="mermaid" id="mermaid-preview" style="position: fixed; top: 0; left: 0; width: 75px; height: 50px; z-index: 100; display: block">
+${mermaid}
+</div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true, theme: 'dark'});</script>
+				`;	
+			}
+			else {
+				outputChannel.appendLine('Failed to created Mermaid diagram.');
+			}
+		}
+	}
+
+	// outputChannel.appendLine( html );
+	return html;
+}
+
+
+export async function getWebviewContent() {
+	const html = await getHtml();
+	
 	const styles = `
 	.variable {
 		border: #A4BBE7 1px solid;
 		padding: 0px 3px;
 		border-radius: 2px;
-		background-color: grey;
+		background-color: var(--vscode-editor-background);
 	}
 
 	a {
@@ -190,58 +254,61 @@ export function getWebviewContent() {
 	.formula {   
 		border: #AF54C4 1px solid;
 		border-radius: 2px;
-		background-color: grey;
+		background-color: var(--vscode-editor-background);
 		cursor: pointer;
 	}
 	
 	.clause_block {
 		position: relative;
 		margin: 10px -10px;
-		background-color: darkgrey;
+		padding: 0px 10px;
+		background-color: rgb(49, 48, 53);
 		border: 1px solid black;
 		border-radius: 3px;
 	}
 	
 	.ulist_block {
 		border: #A4BBE7 1px solid;
-		padding: 0px 3px;
+		padding: 0px 10px;
+		margin: 10 0;
 		border-radius: 2px;
-		background-color: grey;
+		background-color: rgb(65, 63, 70);
 	}
 	
 	.olist_block {
 		border: #A4BBE7 1px solid;
-		padding: 0px 3px;
+		padding: 0px 10px;
+		margin: 10px 0;
 		border-radius: 2px;
-		background-color: grey;
+		background-color: rgb(65, 63, 70);
 	}
 	
 	.join_inline {
 		border: #A4BBE7 1px solid;
 		padding: 0px 3px;
 		border-radius: 2px;
-		background-color: grey;
+		background-color: var(--vscode-editor-background);
 	}
 	
 	.if_inline {
 		border: #A4BBE7 1px solid;
 		padding: 0px 3px;
 		border-radius: 2px;
-		background-color: grey;
+		background-color: var(--vscode-editor-background);
 	}
 	
 	.else_inline {
 		border: #A4BBE7 1px solid;
 		padding: 0px 3px;
 		border-radius: 2px;
-		background-color: grey;
+		background-color: var(--vscode-editor-background);
 	}
 	
 	.optional_inline {
 		border: #A4BBE7 1px solid;
 		padding: 0px 3px;
 		border-radius: 2px;
-		background-color: grey;
+		background-color: var(--vscode-editor-background);
 	}
 
 	span {
@@ -263,9 +330,8 @@ export function getWebviewContent() {
 		color: #FFFFFF;
 		text-decoration: none;
 		text-align: center;
-		border: 1px solid #141F3C;
-		background-color: #141F3C;
-		transition-duration: 0.25s;
+		border: 1px solid rgb(65, 63, 70);
+		background-color: rgb(65, 63, 70);
 		-webkit-border-radius: 5px;
 		-moz-border-radius: 5px;
 		border-radius: 2px;
@@ -281,7 +347,7 @@ export function getWebviewContent() {
 		content: "";
 		border-style: solid;
 		border-width: 6px 6px 0 6px;
-		border-color: rgba(0,0,0,0.85) transparent transparent transparent;
+		border-color: rgb(65, 63, 70) transparent transparent transparent;
 	  }
 	  span:hover:after{ visibility: visible; opacity: 1; bottom: 20px; }
 	  span:hover:before{ visibility: visible; opacity: 1; bottom: 14px; }
@@ -291,11 +357,11 @@ export function getWebviewContent() {
   <head>
 	  <meta charset="UTF-8">
 	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	  <title>Template Preview</title>
+	  <title>Accord Project</title>
 	  <style>${styles}</style>
   </head>
   <body>
-	  ${html}
+${html}
   </body>
   </html>`;
   }

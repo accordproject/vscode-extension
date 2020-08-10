@@ -32,16 +32,19 @@ import {
 	setOutputChannel
 } from './commandHandlers';
 
-
 let client: LanguageClient;
+
+async function onDocumentChange(event) {
+	if (event.document.languageId === 'ciceroMark' || event.document.languageId === 'concerto') {
+		return getWebviewContent();;
+	}
+
+	return null;
+}
 
 export function activate(context: vscode.ExtensionContext) {
 
-	// HACK - set the process.browser variable so that the Concerto
-	// logger doesn't try to create log files. The node.js process created
-	// for the Electron app doesn't seem to have a cwd so Concerto tries
-	// to create logs in the file system root, which will fail, causing
-	// the module to fail to log, which crashes the extension
+	// Set the process.browser variable so that the Concerto logger doesn't try to create log files
 	(process as any).browser = true;
 
 	// The server is implemented in node
@@ -112,7 +115,7 @@ export function activate(context: vscode.ExtensionContext) {
 	let currentPanel: vscode.WebviewPanel | undefined = undefined;
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand('cicero-vscode-extension.showPreview', (file: vscode.Uri) => {
+		vscode.commands.registerCommand('cicero-vscode-extension.showPreview', async (file: vscode.Uri) => {
 			const columnToShowIn = vscode.ViewColumn.Beside;
 
 			if (currentPanel) {
@@ -122,11 +125,13 @@ export function activate(context: vscode.ExtensionContext) {
 				// Otherwise, create a new panel
 				currentPanel = vscode.window.createWebviewPanel(
 					'cicero',
-					'Template Preview',
-					columnToShowIn, {}
+					'Accord Project Preview',
+					columnToShowIn, {
+						enableScripts: true
+					  }
 				);
 
-				currentPanel.webview.html = getWebviewContent();
+				currentPanel.webview.html = await getWebviewContent();
 
 				// Reset when the current panel is closed
 				currentPanel.onDidDispose(
@@ -137,17 +142,19 @@ export function activate(context: vscode.ExtensionContext) {
 					context.subscriptions
 				);
 
-				// update the preview when the template grammar changes
-				vscode.workspace.onDidChangeTextDocument((event) => {
-					if (event.document.languageId === 'ciceroMark') {
-						currentPanel.webview.html = getWebviewContent();;
+				// update the preview when the text document changes
+				vscode.workspace.onDidChangeTextDocument( async (event) => {
+					const content = await onDocumentChange(event);
+					if(content) {
+						currentPanel.webview.html = content;
 					}
 				});
 
 				// update the preview when the active editor changes
-				vscode.window.onDidChangeActiveTextEditor((event) => {
-					if (event.document && event.document.languageId === 'ciceroMark') {
-						currentPanel.webview.html = getWebviewContent();;
+				vscode.window.onDidChangeActiveTextEditor( async (event) => {
+					const content = await onDocumentChange(event);
+					if(content) {
+						currentPanel.webview.html = content;
 					}
 				});
 			}

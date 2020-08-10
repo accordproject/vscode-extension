@@ -4,7 +4,7 @@
 	"description": "Accord Project extension for Visual Studio Code, providing tools for template development.",
 	"author": "Accord Project",
 	"license": "Apache-2.0",
-	"version": "0.21.9",
+	"version": "0.21.10",
 	"icon": "icon.png",
 	"repository": {
 		"type": "git",
@@ -122,7 +122,7 @@
 			},
 			{
 				"command": "cicero-vscode-extension.showPreview",
-				"title": "Show Preview",
+				"title": "Open Preview",
 				"icon": {
 					"light": "./assets/light/open-preview.svg",
 					"dark": "./assets/dark/open-preview.svg"
@@ -151,13 +151,18 @@
 					"when": "explorerResourceIsFolder",
 					"command": "cicero-vscode-extension.triggerClause",
 					"group": "AccordProject@4"
+				},
+				{
+					"when": "resourceLangId == ciceroMark || resourceLangId == concerto",
+					"command": "cicero-vscode-extension.showPreview",
+					"group": "AccordProject@5"
 				}
 			],
 			"editor/title": [
 				{
-				  "when": "resourceLangId == ciceroMark",
-				  "command": "cicero-vscode-extension.showPreview",
-				  "group": "navigation"
+					"when": "resourceLangId == ciceroMark || resourceLangId == concerto",
+					"command": "cicero-vscode-extension.showPreview",
+					"group": "navigation"
 				}
 			],
 			"commandPalette": [
@@ -190,10 +195,10 @@
 	},
 	"devDependencies": {
 		"@types/mocha": "^7.0.2",
-		"mocha": "^8.0.1",
-		"@types/node": "^12.12.0",
-		"eslint": "^6.4.0",
+		"@types/node": "^12.12.54",
 		"@typescript-eslint/parser": "^2.3.0",
+		"eslint": "^6.4.0",
+		"mocha": "^8.1.1",
 		"typescript": "^3.9.4",
 		"vsce": "^1.77.0"
 	}

@@ -1,5 +1,9 @@
 ## Change Log
 
+### 0.21.10
+
+- HTML preview for Concerto models
+
 ### 0.21.9
 
 - HTML preview for template markdown text

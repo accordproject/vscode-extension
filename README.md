@@ -29,7 +29,7 @@ Please visit the [Visual Studio Code Marketplace](https://marketplace.visualstud
 - Trigger templates (send them data and view the results)
 - Syntax highlighting for all files
 - Compilation and problem markers
-- HTML preview for template markdown text
+- HTML preview for template markdown text and Concerto models
 
 ### Commands
 
@@ -39,7 +39,8 @@ Please visit the [Visual Studio Code Marketplace](https://marketplace.visualstud
 - Trigger a template, parsing data from sample.md and passing in `request.json` and `state.json` (context-click on root folder)
 
 ### Views
-- HTML preview for template text (open `grammar.tem.md` and then press the _Show Preview_ icon in the editor menu)
+- HTML preview for template text (open `grammar.tem.md` and then press the _Open Preview_ icon in the editor or context menu)
+- HTML preview for Concerto models (open `*.cto` and then press the _Open Preview_ icon in the editor or context menu)
 
 ### Quick Fixes
 
