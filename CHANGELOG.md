@@ -1,5 +1,9 @@
 ## Change Log
 
+### 0.21.12
+
+- Fix dependencies
+
 ### 0.21.11
 
 - Fix dependencies

@@ -16,7 +16,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-const plantumlEncoder = require('plantuml-encoder');
 import MemoryWriter from './memorywriter';
 import MermaidVisitor from './mermaidvisitor';
 const Template = require('@accordproject/cicero-core').Template;
