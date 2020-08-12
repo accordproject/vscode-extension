@@ -4,7 +4,7 @@
 	"description": "Accord Project extension for Visual Studio Code, providing tools for template development.",
 	"author": "Accord Project",
 	"license": "Apache-2.0",
-	"version": "0.21.12",
+	"version": "0.21.13",
 	"icon": "icon.png",
 	"repository": {
 		"type": "git",
@@ -138,12 +138,12 @@
 					"group": "AccordProject@1"
 				},
 				{
-					"when": "explorerResourceIsFolder",
+					"when": "resourceLangId == concerto",
 					"command": "cicero-vscode-extension.downloadModels",
 					"group": "AccordProject@2"
 				},
 				{
-					"when": "explorerResourceIsFolder",
+					"when": "resourceLangId == concerto",
 					"command": "cicero-vscode-extension.exportClassDiagram",
 					"group": "AccordProject@3"
 				},

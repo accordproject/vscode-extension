@@ -33,9 +33,9 @@ Please visit the [Visual Studio Code Marketplace](https://marketplace.visualstud
 
 ### Commands
 
-- Work offline by downloading data model dependencies (context-click on root folder)
+- Work offline by downloading Concerto model dependencies (context-click on a `*.cto` file)
 - Package templates into Cicero Template Archive (cta) files (context-click on root folder)
-- Generate PlantUML class diagram (context-click on root folder)
+- Export PlantUML class diagram (context-click on a `*.cto` file)
 - Trigger a template, parsing data from sample.md and passing in `request.json` and `state.json` (context-click on root folder)
 
 ### Views

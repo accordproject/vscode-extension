@@ -1,5 +1,18 @@
 ## Change Log
 
+### 0.21.13
+
+- HTML preview for Concerto models improvements
+   - Now uses unsaved editor contents
+   - Works on CTO files that are outside of a template
+   - Include namespace and declaration metadata in the generated HTML
+   - Move context menu to CTO files
+- Move context menu for download external models to CTO files
+   - Works on CTO files that are outside of a template
+- Move context menu for export class diagram to CTO files
+   - Works on CTO files that are outside of a template
+- Improve error checking for template commands
+
 ### 0.21.12
 
 - Fix dependencies

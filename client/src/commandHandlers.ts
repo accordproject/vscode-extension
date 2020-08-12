@@ -16,35 +16,105 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as glob from 'glob';
+
 import MemoryWriter from './memorywriter';
 import MermaidVisitor from './mermaidvisitor';
+import {
+	LogicManager
+} from '@accordproject/ergo-compiler';
+
 const Template = require('@accordproject/cicero-core').Template;
 const CodeGen = require('@accordproject/concerto-tools').CodeGen;
 const FileWriter = require('@accordproject/concerto-tools').FileWriter;
 const Clause = require('@accordproject/cicero-core').Clause;
 const Engine = require('@accordproject/cicero-engine').Engine;
+const ModelFile = require('@accordproject/concerto-core').ModelFile;
 
 var md = require('markdown-it')()
 	.use(require('@accordproject/markdown-it-template'))
 	.use(require('@accordproject/markdown-it-cicero'));
-	
+
 let outputChannel: vscode.OutputChannel
 
-export function setOutputChannel(oc : vscode.OutputChannel) {
+export function setOutputChannel(oc: vscode.OutputChannel) {
 	outputChannel = oc;
+}
+
+
+async function getModelManager(ctoFile: vscode.Uri) {
+	try {
+		const modelRoot = path.dirname(ctoFile.fsPath)
+		const modelFileName = ctoFile.fsPath;
+
+		const loadAllModels = false;
+		const logicManager = new LogicManager('cicero');
+		const modelManager = logicManager.getModelManager();
+		const loadedModelFiles = [];
+
+		// load the edited file
+		const contents = getDocument(modelFileName);
+		const rootModelFile = new ModelFile(modelManager, contents, modelFileName);
+		loadedModelFiles.push(rootModelFile);
+
+		// is the cto file is in a directory called 'model'
+		// i.e. templates.accordproject.org
+		// then we also load all the files in the directory, otherwise we assume
+		// that the model file is standalone and only has internet dependencies
+		// i.e. models.accordproject.org
+		if (path.basename(modelRoot) === 'model') {
+			path.dirname(ctoFile.fsPath)
+
+			// Find all cto under the directory that contains the cto file
+			const modelFiles = glob.sync(`${modelRoot}/**/*.cto`);
+
+			// read the model files
+			for (const file of modelFiles) {
+				if (file !== modelFileName) {
+					const contents = getDocument(file);
+					if (contents) {
+						const m = new ModelFile(modelManager, contents, file);
+						loadedModelFiles.push(m);
+					}
+				}
+			}
+		}
+
+		modelManager.addModelFiles(loadedModelFiles, null, true);
+
+		// download external dependencies and validate
+		try {
+			await modelManager.updateExternalModels();
+		} catch (err) {
+			// assume we are offline
+			modelManager.validateModelFiles();
+		}
+
+		return modelManager;
+	} catch (error) {
+		outputChannel.appendLine(`${error} : ${error.stack}`);
+		vscode.window.showErrorMessage(error);
+	}
+
+	return null;
 }
 
 export async function exportArchive(file: vscode.Uri) {
 	try {
-		const template = await Template.fromDirectory(file.path, {skipUpdateExternalModels: true});
+		if(!checkTemplate(file)) {
+			return false;
+		}
+
+		const template = await Template.fromDirectory(file.path, {
+			skipUpdateExternalModels: true
+		});
 		const archive = await template.toArchive('cicero');
 		const outputPath = path.join(file.path, `${template.getIdentifier()}.cta`);
 		fs.writeFileSync(outputPath, archive);
 		vscode.window.showInformationMessage(`Created archive ${outputPath}`);
 		return true;
-	}
-	catch(error) {
-		vscode.window.showErrorMessage(`Error ${error}`);
+	} catch (error) {
+		vscode.window.showErrorMessage(error);
 	}
 
 	return false;
@@ -52,55 +122,57 @@ export async function exportArchive(file: vscode.Uri) {
 
 export async function downloadModels(file: vscode.Uri) {
 	try {
-		const template = await Template.fromDirectory(file.path);
-		const outputPath = path.join(file.path, 'model');
-		template.getModelManager().writeModelsToFileSystem(outputPath);
-		vscode.window.showInformationMessage(`Downloaded models to ${outputPath}`);
+		const outputPath = path.dirname(file.path);
+		const modelManager = await getModelManager(file)
+
+		if( modelManager ) {
+			modelManager.writeModelsToFileSystem(outputPath);
+			vscode.window.showInformationMessage(`Downloaded models to ${outputPath}`);	
+		}
 		return true;
-	}
-	catch(error) {
-		vscode.window.showErrorMessage(`Error ${error}`);
+	} catch (error) {
+		vscode.window.showErrorMessage(error);
 	}
 
 	return false;
 }
 
-async function getMermaid(ctoFile: vscode.Uri) {
-	try {
-		const templateRootPath = path.resolve(ctoFile.fsPath, '..', '..');
-		const modelFileName = ctoFile.fsPath;
-		const template = await Template.fromDirectory(templateRootPath, {skipUpdateExternalModels: true});
-		const modelManager = template.getModelManager();
-		outputChannel.appendLine(`Active file: ${modelFileName}`);
-		// const modelFile = modelManager.getModelFileByFileName(modelFileName);
-
-		// modelManager.getModelFiles().forEach(modelFile => {
-		// 	outputChannel.appendLine(`- ${modelFile.getName()}`);
-		// });
-
-		// if(!modelFile) {
-		// 	vscode.window.showErrorMessage(`Error failed to find model file ${modelFileName} in the model manager.`);
-		// 	return false;
-		// }
-
-		// outputChannel.appendLine(`Found: ${modelFile.getNamespace()}`);
-
-		const visitor = new MermaidVisitor();
-		let parameters = {} as any;
-		parameters.fileWriter = new MemoryWriter();
-		const virtualFileName = 'model.mmd';
-
-		// parameters.fileWriter.openFile('model.mmd');
-        // parameters.fileWriter.writeLine(0, 'classDiagram');
-		modelManager.accept(visitor, parameters);
-		// parameters.fileWriter.closeFile();
-
-		// outputChannel.appendLine(`Result: ${JSON.stringify(parameters.fileWriter.getFiles())}`);
-
-		return parameters.fileWriter.getFiles()['/model.mmd'];
+function getDocument(file) {
+	for (let n = 0; n < vscode.workspace.textDocuments.length; n++) {
+		const doc = vscode.workspace.textDocuments[n];
+		if (doc.fileName === file) {
+			const text = doc.getText();
+			return text;
+		}
 	}
-	catch(error) {
-		vscode.window.showErrorMessage(`Error ${error}`);
+
+	if(fs.existsSync(file)) {
+		return fs.readFileSync(file, 'utf-8');
+	}
+	else {
+		return null;
+	}
+}
+
+async function getMermaid(ctoFile: vscode.Uri) {
+
+	try {
+		const modelManager = await getModelManager(ctoFile);
+		const namespaces = modelManager.getModelFiles().map( m => m.getNamespace()).sort();
+
+		if (modelManager) {
+			const visitor = new MermaidVisitor();
+			let parameters = {} as any;
+			parameters.fileWriter = new MemoryWriter();
+			modelManager.accept(visitor, parameters);
+			return {
+				mermaid: parameters.fileWriter.getFiles()['/model.mmd'],
+				namespaces,
+				modelManager
+			}
+		}
+	} catch (error) {
+		vscode.window.showErrorMessage(error);
 	}
 
 	return false;
@@ -108,93 +180,126 @@ async function getMermaid(ctoFile: vscode.Uri) {
 
 export async function exportClassDiagram(file: vscode.Uri) {
 	try {
-		const outputPath = path.join(file.path, 'model');
-		const template = await Template.fromDirectory(file.path, {skipUpdateExternalModels: true});
-		const modelManager = template.getModelManager();
-		const PlantUMLVisitor = CodeGen.PlantUMLVisitor;
+		const outputPath = path.dirname(file.path);
+		const modelManager = await getModelManager(file);
 
-		const visitor = new PlantUMLVisitor();
-		let parameters = {} as any;
-		parameters.fileWriter = new FileWriter( outputPath );
-		modelManager.accept(visitor, parameters);
+		if(modelManager) {
+			const PlantUMLVisitor = CodeGen.PlantUMLVisitor;
 
-		vscode.window.showInformationMessage(`Exported class diagram to ${outputPath}`);
-		return true;
-	}
-	catch(error) {
-		vscode.window.showErrorMessage(`Error ${error}`);
+			const visitor = new PlantUMLVisitor();
+			let parameters = {} as any;
+			parameters.fileWriter = new FileWriter(outputPath);
+			modelManager.accept(visitor, parameters);
+	
+			vscode.window.showInformationMessage(`Exported class diagram to ${outputPath}`);
+			return true;	
+		}
+	} catch (error) {
+		vscode.window.showErrorMessage(error);
 	}
 
 	return false;
 }
 
+function checkTemplate(file: vscode.Uri) {
+	const packageJsonPath = path.join(file.fsPath, 'package.json');
+	// vscode.window.showInformationMessage(`Loading template from ${packageJsonPath}`);
+
+	const packageJsonContents = getDocument(packageJsonPath);
+
+	if(!packageJsonContents) {
+		vscode.window.showErrorMessage('Template package.json file was not found.');
+		return false;
+	}
+
+	try {
+		const packageJson = JSON.parse(packageJsonContents);
+		if(!packageJson.accordproject) {
+			vscode.window.showErrorMessage('package.json does not define a Cicero template.');
+			return false;
+		}
+	}
+	catch(error) {
+		vscode.window.showErrorMessage('package.json contents is invalid.');
+		return false;
+	}
+
+	return true;
+}
+
 export async function triggerClause(file: vscode.Uri) {
 	try {
+		if(!checkTemplate(file)) {
+			return false;
+		}
+
 		outputChannel.show();
-		const template = await Template.fromDirectory(file.path, {skipUpdateExternalModels: true});
+		
+		const template = await Template.fromDirectory(file.path, {
+			skipUpdateExternalModels: true
+		});
 		const clause = new Clause(template);
 		const samplePath = path.join(file.path, 'text', 'sample.md');
 
-		if(!fs.existsSync(samplePath)) {
+		if (!fs.existsSync(samplePath)) {
 			vscode.window.showErrorMessage('Cannot trigger: /text/sample.md file was not found.');
 			return false;
 		}
 
 		const requestPath = path.join(file.path, 'request.json');
 
-		if(!fs.existsSync(requestPath)) {
+		if (!fs.existsSync(requestPath)) {
 			vscode.window.showErrorMessage('Cannot trigger:/request.json file was not found.');
 			return false;
 		}
 
-		const sampleText = fs.readFileSync( samplePath, 'utf8');
+		const sampleText = fs.readFileSync(samplePath, 'utf8');
 		clause.parse(sampleText);
 		const parseResult = clause.getData();
 
-		outputChannel.appendLine( 'template' );
-		outputChannel.appendLine( '========' );
-		outputChannel.appendLine( template.getIdentifier() );
-		outputChannel.appendLine( '' );
+		outputChannel.appendLine('template');
+		outputChannel.appendLine('========');
+		outputChannel.appendLine(template.getIdentifier());
+		outputChannel.appendLine('');
 
-		outputChannel.appendLine( 'sample.md parse result' );
-		outputChannel.appendLine( '======================' );
-		outputChannel.appendLine( JSON.stringify(parseResult, null, 2) );
-		outputChannel.appendLine( '' );
+		outputChannel.appendLine('sample.md parse result');
+		outputChannel.appendLine('======================');
+		outputChannel.appendLine(JSON.stringify(parseResult, null, 2));
+		outputChannel.appendLine('');
 
-		const request = JSON.parse(fs.readFileSync( requestPath, 'utf8'));
+		const request = JSON.parse(fs.readFileSync(requestPath, 'utf8'));
 
-		outputChannel.appendLine( 'request.json' );
-		outputChannel.appendLine( '============' );
-		outputChannel.appendLine( JSON.stringify(request, null, 2) );
-		outputChannel.appendLine( '' );
+		outputChannel.appendLine('request.json');
+		outputChannel.appendLine('============');
+		outputChannel.appendLine(JSON.stringify(request, null, 2));
+		outputChannel.appendLine('');
 
 		const statePath = path.join(file.path, 'state.json');
 		const engine = new Engine();
 		let state = null;
 
-		if(!fs.existsSync(statePath)) {
+		if (!fs.existsSync(statePath)) {
 			const initResult = await engine.init(clause, null);
 			state = initResult.state;
 		} else {
-			state = JSON.parse(fs.readFileSync( statePath, 'utf8'));
+			state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
 		}
 
-		outputChannel.appendLine( 'state.json' );
-		outputChannel.appendLine( '==========' );
-		outputChannel.appendLine( JSON.stringify(state, null, 2) );
-		outputChannel.appendLine( '' );	
+		outputChannel.appendLine('state.json');
+		outputChannel.appendLine('==========');
+		outputChannel.appendLine(JSON.stringify(state, null, 2));
+		outputChannel.appendLine('');
 
-		const result = await engine.trigger(clause, request, state, null );
+		const result = await engine.trigger(clause, request, state, null);
 
-		outputChannel.appendLine( 'response' );
-		outputChannel.appendLine( '========' );
-		outputChannel.appendLine( JSON.stringify(result, null, 2) );
-		outputChannel.appendLine( '' );
+		outputChannel.appendLine('response');
+		outputChannel.appendLine('========');
+		outputChannel.appendLine(JSON.stringify(result, null, 2));
+		outputChannel.appendLine('');
 
 		return true;
-	}
-	catch(error) {
-		vscode.window.showErrorMessage(`Error ${error}`);
+	} catch (error) {
+		vscode.window.showErrorMessage(error);
 	}
 
 	return false;
@@ -204,27 +309,39 @@ async function getHtml() {
 
 	let html = 'To display preview please open a grammar.tem.md or a *.cto file.';
 
-	if(vscode.window.activeTextEditor && vscode.window.activeTextEditor.document) {
-		if(vscode.window.activeTextEditor.document.languageId === 'ciceroMark') {
+	if (vscode.window.activeTextEditor && vscode.window.activeTextEditor.document) {
+		if (vscode.window.activeTextEditor.document.languageId === 'ciceroMark') {
 			html = md.render(vscode.window.activeTextEditor.document.getText());
-		}
-		else if (vscode.window.activeTextEditor.document.languageId === 'concerto') {
+		} else if (vscode.window.activeTextEditor.document.languageId === 'concerto') {
 
-			const mermaid = await getMermaid(vscode.window.activeTextEditor.document.uri);
-			if(mermaid) {
-				outputChannel.appendLine(mermaid);
-				html = `<h1>Class Diagram</h2>
-<div class="mermaid" id="mermaid-main">
-${mermaid}
-</div>
-<div class="mermaid" id="mermaid-preview" style="position: fixed; top: 0; left: 0; width: 75px; height: 50px; z-index: 100; display: block">
-${mermaid}
+			const result = await getMermaid(vscode.window.activeTextEditor.document.uri);
+			if (result) {
+				outputChannel.appendLine(result.mermaid);
+
+				let namespaces = '<ul>';
+				result.namespaces.forEach(ns => {
+					namespaces += `<li>${ns}</li>`
+				});
+				namespaces += `</ul>`
+				html = `<h1>Class Diagram</h1>
+<h2>Namespaces</h2>
+${namespaces}
+<table>
+  <tr><th>Type</th><th>Count</th></tr>
+  <tr><td>Asset</td><td>${result.modelManager.getAssetDeclarations(false).length}</td></tr>
+  <tr><td>Participant</td><td>${result.modelManager.getParticipantDeclarations(false).length}</td></tr>
+  <tr><td>Transaction</td><td>${result.modelManager.getTransactionDeclarations(false).length}</td></tr>
+  <tr><td>Event</td><td>${result.modelManager.getEventDeclarations(false).length}</td></tr>
+  <tr><td>Enumeration</td><td>${result.modelManager.getEnumDeclarations(false).length}</td></tr>
+  <tr><td>Concept</td><td>${result.modelManager.getConceptDeclarations(false).length}</td></tr>
+</table>
+<div class="mermaid">
+${result.mermaid}
 </div>
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({startOnLoad:true, theme: 'dark'});</script>
-				`;	
-			}
-			else {
+				`;
+			} else {
 				outputChannel.appendLine('Failed to created Mermaid diagram.');
 			}
 		}
@@ -237,8 +354,12 @@ ${mermaid}
 
 export async function getWebviewContent() {
 	const html = await getHtml();
-	
+
 	const styles = `
+	table, th, td {
+		border: 1px solid;
+		color: var(--vscode-editor-foreground)
+	}
 	.variable {
 		border: #A4BBE7 1px solid;
 		padding: 0px 3px;
@@ -363,4 +484,4 @@ export async function getWebviewContent() {
 ${html}
   </body>
   </html>`;
-  }
+}
