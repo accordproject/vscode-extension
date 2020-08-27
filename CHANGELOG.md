@@ -1,5 +1,9 @@
 ## Change Log
 
+### 0.21.14
+- Update to Cicero 0.21.4
+- Export Ergp source cicero template archive
+
 ### 0.21.13
 
 - HTML preview for Concerto models improvements

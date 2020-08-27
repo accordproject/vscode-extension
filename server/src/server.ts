@@ -431,12 +431,14 @@ async function validateModels(textDocument: TextDocument, diagnosticMap, templat
 
         // get the template logic from cache
         const logicManager = new LogicManager('cicero');
-        const cacheEntry = templateCache[parentDir] = {
+        const cacheEntry = {
             logicManager,
             parserManager: null,
             data: null,
             templateModel : null
         }
+
+        templateCache[parentDir] = cacheEntry;
         
         const modelManager = logicManager.getModelManager();
         modelManager.clearModelFiles();

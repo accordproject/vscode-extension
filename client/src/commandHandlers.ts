@@ -47,7 +47,6 @@ async function getModelManager(ctoFile: vscode.Uri) {
 		const modelRoot = path.dirname(ctoFile.fsPath)
 		const modelFileName = ctoFile.fsPath;
 
-		const loadAllModels = false;
 		const logicManager = new LogicManager('cicero');
 		const modelManager = logicManager.getModelManager();
 		const loadedModelFiles = [];
@@ -93,7 +92,7 @@ async function getModelManager(ctoFile: vscode.Uri) {
 		return modelManager;
 	} catch (error) {
 		outputChannel.appendLine(`${error} : ${error.stack}`);
-		vscode.window.showErrorMessage(error);
+		vscode.window.showErrorMessage( `Failed to build models ${error}`);
 	}
 
 	return null;
@@ -105,16 +104,16 @@ export async function exportArchive(file: vscode.Uri) {
 			return false;
 		}
 
-		const template = await Template.fromDirectory(file.path, {
-			skipUpdateExternalModels: true
-		});
-		const archive = await template.toArchive('cicero');
+		await vscode.workspace.saveAll();
+		const template = await Template.fromDirectory(file.path);
+		const archive = await template.toArchive('ergo');
+
 		const outputPath = path.join(file.path, `${template.getIdentifier()}.cta`);
 		fs.writeFileSync(outputPath, archive);
 		vscode.window.showInformationMessage(`Created archive ${outputPath}`);
 		return true;
 	} catch (error) {
-		vscode.window.showErrorMessage(error);
+		vscode.window.showErrorMessage( `Failed to export archive ${error}`);
 	}
 
 	return false;
@@ -131,7 +130,7 @@ export async function downloadModels(file: vscode.Uri) {
 		}
 		return true;
 	} catch (error) {
-		vscode.window.showErrorMessage(error);
+		vscode.window.showErrorMessage( `Failed to download models ${error}`);
 	}
 
 	return false;
@@ -172,7 +171,7 @@ async function getMermaid(ctoFile: vscode.Uri) {
 			}
 		}
 	} catch (error) {
-		vscode.window.showErrorMessage(error);
+		vscode.window.showErrorMessage( `Failed to generate diagram ${error}`);
 	}
 
 	return false;
@@ -195,7 +194,7 @@ export async function exportClassDiagram(file: vscode.Uri) {
 			return true;	
 		}
 	} catch (error) {
-		vscode.window.showErrorMessage(error);
+		vscode.window.showErrorMessage( `Failed to generate diagram ${error}`);
 	}
 
 	return false;
@@ -235,9 +234,8 @@ export async function triggerClause(file: vscode.Uri) {
 
 		outputChannel.show();
 		
-		const template = await Template.fromDirectory(file.path, {
-			skipUpdateExternalModels: true
-		});
+		await vscode.workspace.saveAll();
+		const template = await Template.fromDirectory(file.path);
 		const clause = new Clause(template);
 		const samplePath = path.join(file.path, 'text', 'sample.md');
 
@@ -299,7 +297,7 @@ export async function triggerClause(file: vscode.Uri) {
 
 		return true;
 	} catch (error) {
-		vscode.window.showErrorMessage(error);
+		vscode.window.showErrorMessage( `Failed to trigger clause ${error}`);
 	}
 
 	return false;
