@@ -2,7 +2,8 @@
 
 ### 0.21.14
 - Update to Cicero 0.21.4
-- Export Ergp source cicero template archive
+- Export Ergo source cicero template archive
+- Force save open documents before exporting archive or triggering clause
 
 ### 0.21.13
 
