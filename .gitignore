@@ -5,3 +5,4 @@ log
 client/out
 server/out
 .DS_Store
+*.vsix
