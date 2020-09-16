@@ -1,5 +1,11 @@
 ## Change Log
 
+### 0.21.16
+- Update to Cicero 0.21.7
+
+### 0.21.15
+- Update to Cicero 0.21.6
+
 ### 0.21.14
 - Update to Cicero 0.21.4
 - Export Ergo source cicero template archive
