@@ -4,7 +4,7 @@
 	"description": "Accord Project extension for Visual Studio Code, providing tools for template development.",
 	"author": "Accord Project",
 	"license": "Apache-2.0",
-	"version": "0.21.15",
+	"version": "0.21.16",
 	"publisher": "accordproject",
 	"repository": {
 		"type": "git",
@@ -18,12 +18,12 @@
 		"vscode-test": "^1.3.0"
 	},
 	"dependencies": {
-		"@accordproject/cicero-core": "^0.21.6",
-		"@accordproject/cicero-engine": "^0.21.6",
-		"@accordproject/concerto-core": "^0.82.8",
-		"@accordproject/concerto-tools": "^0.82.8",
-		"@accordproject/markdown-it-cicero": "^0.12.8",
-		"@accordproject/markdown-it-template": "^0.12.8",
+		"@accordproject/cicero-core": "^0.21.7",
+		"@accordproject/cicero-engine": "^0.21.7",
+		"@accordproject/concerto-core": "^0.82.9",
+		"@accordproject/concerto-tools": "^0.82.9",
+		"@accordproject/markdown-it-cicero": "^0.12.9",
+		"@accordproject/markdown-it-template": "^0.12.9",
 		"mermaid": "^8.7.0",
 		"vscode-languageclient": "^6.1.3"
 	}
