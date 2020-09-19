@@ -1,5 +1,8 @@
 ## Change Log
 
+### 0.21.17
+- Update to Cicero 0.21.8
+
 ### 0.21.16
 - Update to Cicero 0.21.7
 
