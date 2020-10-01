@@ -1,7 +1,7 @@
 {
 	"name": "cicero-vscode-extension-server",
 	"description": "A language server for Accord Project templates",
-	"version": "0.21.17",
+	"version": "0.21.18",
 	"license": "Apache-2.0",
 	"engines": {
 		"node": "*"
@@ -11,11 +11,11 @@
 		"url": "https://github.com/accordproject/cicero-vscode-extension"
 	},
 	"dependencies": {
-		"@accordproject/cicero-core": "^0.21.8",
-		"@accordproject/concerto-core": "^0.82.9",
-		"@accordproject/ergo-compiler": "^0.21.8",
-		"@accordproject/ergo-engine": "^0.21.8",
-		"@accordproject/markdown-template": "^0.12.10",
+		"@accordproject/cicero-core": "^0.21.9",
+		"@accordproject/concerto-core": "^0.82.11",
+		"@accordproject/ergo-compiler": "^0.21.9",
+		"@accordproject/ergo-engine": "^0.21.9",
+		"@accordproject/markdown-template": "^0.12.12",
 		"fast-safe-stringify": "2.0.6",
 		"glob": "^7.1.6",
 		"vscode-languageserver": "^6.1.1",
