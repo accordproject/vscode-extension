@@ -1,0 +1,47 @@
+# This workflow will publish a VSIX package to VSCode Markeplace when a release is created
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    name: Publish to VSCode Marketplace
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14
+      - name: Build
+        run: |
+          npm ci
+          npm run package:vsix
+          npm install -g vsce
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish
+        run: vsce publish -p ${{ secrets.VSCE_TOKEN }} ${{ github.event.release.tag_name }}
+
+      - name: create PR to increment version
+        id: cpr
+        uses: peter-evans/create-pull-request@v3
+        with:
+          base: master
+          commit-message: 'chore(actions): publish ${{ github.event.release.tag_name }} to VSCode Marketplace'
+          committer: GitHub <noreply@github.com>
+          author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+          signoff: true
+          branch: cicero-vscode-publish-${{ github.event.release.tag_name }}
+          delete-branch: true
+          title: 'chore(actions): publish ${{ github.event.release.tag_name }} to VSCode Marketplace'
+          body: |
+            # Increment Versions
+
+            Update the package.json version number after publishing to VSCode Marketplace.
+          assignees: ${{ github.actor }}
+          reviewers: ${{ github.actor }}
+          draft: false
