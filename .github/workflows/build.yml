@@ -16,7 +16,6 @@ jobs:
           - 14.x
         os:
           - ubuntu-latest
-          - windows-latest
           - macOS-latest
 
     runs-on: ${{ matrix.os }}
@@ -33,5 +32,5 @@ jobs:
       - run: npm ci
       - run: npm run package:vsix
       - run: npm install -g vsce
-      - run: DISPLAY=:0 npm test --silent
+      - run: npm test --silent
 
