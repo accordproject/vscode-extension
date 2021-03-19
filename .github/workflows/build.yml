@@ -33,5 +33,5 @@ jobs:
       - run: npm ci
       - run: npm run package:vsix
       - run: npm install -g vsce
-      - run: npm test --silent
+      - run: DISPLAY=:0 npm test --silent
 
