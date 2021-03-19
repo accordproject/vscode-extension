@@ -13,12 +13,11 @@ jobs:
     strategy:
       matrix:
         node-version:
-          # - 12.x
           - 14.x
         os:
-          # - ubuntu-latest
-          # - windows-latest
+          - ubuntu-latest
           - macOS-latest
+          - windows-latest
 
     runs-on: ${{ matrix.os }}
 
@@ -34,5 +33,14 @@ jobs:
       - run: npm ci
       - run: npm run package:vsix
       - run: npm install -g vsce
-      - run: npm test --silent
-
+    
+      - name: Test
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            xvfb-run -a npm test --silent
+          elif [ "$RUNNER_OS" == "Windows" ]; then
+            npm test
+          else
+            npm test --silent
+          fi
+        shell: bash
