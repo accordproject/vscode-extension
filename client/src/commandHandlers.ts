@@ -47,13 +47,15 @@ async function getModelManager(ctoFile: vscode.Uri) {
 		const modelRoot = path.dirname(ctoFile.fsPath)
 		const modelFileName = ctoFile.fsPath;
 
-		const logicManager = new LogicManager('cicero');
+		const logicManager = new LogicManager('es6');
 		const modelManager = logicManager.getModelManager();
+		modelManager.clearModelFiles();
 		const loadedModelFiles = [];
 
 		// load the edited file
 		const contents = getDocument(modelFileName);
 		const rootModelFile = new ModelFile(modelManager, contents, modelFileName);
+		outputChannel.appendLine(`Loaded model file: ${rootModelFile.getNamespace()}`);
 		loadedModelFiles.push(rootModelFile);
 
 		// is the cto file is in a directory called 'model'
@@ -69,10 +71,12 @@ async function getModelManager(ctoFile: vscode.Uri) {
 
 			// read the model files
 			for (const file of modelFiles) {
-				if (file !== modelFileName) {
-					const contents = getDocument(file);
-					if (contents) {
-						const m = new ModelFile(modelManager, contents, file);
+				const contents = getDocument(file);
+				if (contents) {
+					const m = new ModelFile(modelManager, contents, file);
+					const exists = loadedModelFiles.find( it => it.getNamespace() === m.getNamespace() );
+					if(!exists) {
+						outputChannel.appendLine(`Loaded model file: ${m.getNamespace()}`);
 						loadedModelFiles.push(m);
 					}
 				}
