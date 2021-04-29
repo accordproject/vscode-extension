@@ -430,7 +430,7 @@ async function validateModels(textDocument: TextDocument, diagnosticMap, templat
         connection.console.log(`*** Validating model files under: ${parentDir}`);
 
         // get the template logic from cache
-        const logicManager = new LogicManager('cicero');
+        const logicManager = new LogicManager('es6');
         const cacheEntry = {
             logicManager,
             parserManager: null,
