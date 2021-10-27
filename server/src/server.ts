@@ -94,8 +94,8 @@ function getTemplateRoot(pathStr, textDocument, diagnosticMap) {
         }
         catch(err) {
             // connection.console.log( `- exception ${err}`);
-            currentPath = path.normalize(path.join(currentPath, '..'));
         }
+        currentPath = path.normalize(path.join(currentPath, '..'));
     }
 
     connection.console.log( `Failed to find template path for ${pathStr}`);
