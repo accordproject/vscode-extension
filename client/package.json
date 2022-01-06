@@ -24,7 +24,7 @@
 		"@accordproject/concerto-tools": "^1.0.0",
 		"@accordproject/markdown-it-cicero": "^0.13.0",
 		"@accordproject/markdown-it-template": "^0.13.0",
-		"mermaid": "^8.7.0",
+		"mermaid": "^8.13.8",
 		"vscode-languageclient": "^6.1.3"
 	}
 }
