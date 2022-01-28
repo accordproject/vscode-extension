@@ -37,6 +37,7 @@
 		"onCommand:cicero-vscode-extension.showPreview"
 	],
 	"main": "./client/out/extension",
+	"browser":"./client/out/web/extension",
 	"contributes": {
 		"languages": [
 			{
@@ -188,18 +189,35 @@
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
 		"package:vsix": "node ./node_modules/vsce/out/vsce package",
+		"compile-web": "webpack",
 		"compile": "tsc -b",
 		"watch": "tsc -b -w",
+		"watch-web":"webpack --watch",
 		"postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
 		"test": "sh ./scripts/e2e.sh"
 	},
 	"devDependencies": {
 		"@types/mocha": "^7.0.2",
 		"@types/node": "^12.12.54",
+		"@types/webpack-env": "^1.16.3",
 		"@typescript-eslint/parser": "^2.3.0",
+		"assert": "^2.0.0",
+		"browserify-zlib": "^0.2.0",
+		"buffer": "^6.0.3",
+		"crypto-browserify": "^3.12.0",
 		"eslint": "^6.4.0",
+		"https-browserify": "^1.0.0",
 		"mocha": "^8.1.2",
+		"path-browserify": "^1.0.1",
+		"process": "^0.11.10",
+		"stream-browserify": "^3.0.0",
+		"stream-http": "^3.2.0",
+		"ts-loader": "^9.2.6",
 		"typescript": "^3.9.4",
-		"vsce": "^1.87.1"
+		"url": "^0.11.0",
+		"vm-browserify": "^1.1.2",
+		"vsce": "^1.87.1",
+		"webpack": "^5.67.0",
+		"webpack-cli": "^4.9.2"
 	}
 }
