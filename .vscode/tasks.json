@@ -31,11 +31,32 @@
 		},
 		{
 			"type": "npm",
-			"script": "watch-web",
+			"script": "compile-web",
 			"group": "build",
-			"isBackground": true,
+			"presentation": {
+				"panel": "dedicated",
+				"reveal": "never"
+			},
 			"problemMatcher": [
-				"$ts-webpack-watch"
+				"$ts-webpack",
+				"$tslint-webpack"
+			]
+		},	
+		{
+			"type": "npm",
+			"script": "watch-web",
+			"isBackground": true,
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"panel": "dedicated",
+				"reveal": "never"
+			},
+			"problemMatcher": [
+				"$ts-webpack-watch",
+				"$tslint-webpack-watch"
 			]
 		}
 	]

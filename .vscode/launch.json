@@ -44,13 +44,29 @@
 			  "--extensionDevelopmentKind=web"
 			],
 			"outFiles": ["${workspaceFolder}/client/out/web/**/*.js"],
-			"preLaunchTask": "npm: watch-web"
-		  }
+			"preLaunchTask": {
+				"type":"npm",
+				"script":"watch-web"
+			} 
+		  },
+		  {
+			"type": "node",
+			"request": "attach",
+			"name": "Web Extension Attach to Server",
+			"port": 6009,
+			"restart": true,
+			"outFiles": [
+				"${workspaceRoot}/server/out/web/**/*.js"
+			]
+		}
 	],
 	"compounds": [
 		{
 			"name": "Client + Server",
 			"configurations": ["Launch Client", "Attach to Server"]
+		},{
+			"name": "WebClient + WebServer",
+			"configurations": ["Run Web Extension in VS Code","Web Extension Attach to Server"]
 		}
 	]
 }

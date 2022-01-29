@@ -311,7 +311,7 @@ async function provideCodeActions(params: CodeActionParams): Promise<CodeAction[
  * The content of a text document has changed. This event is emitted
  * when the text document is first opened or when its content has changed.
  */
-documents.onDidChangeContent(async (change) => {
+documents.onDidChangeContent(async () => {
 	  // Revalidate any open text documents
     documents.all().forEach(validateTextDocument);
 });

@@ -13,7 +13,7 @@ const path = require('path');
 const webpack = require('webpack');
 
 /** @type WebpackConfig */
-const webExtensionConfig = {
+const browerClientConfig = {
 	mode: 'none', // this leaves the source code as close as possible to the original (when packaging we set this to 'production')
 	target: 'webworker', // extensions run in a webworker context
 	entry: {
@@ -22,7 +22,7 @@ const webExtensionConfig = {
 	},
 	output: {
 		filename: '[name].js',
-		path: path.join(__dirname, './client/out/web'),
+		path: path.join(__dirname,'client','out','web'),
 		libraryTarget: 'commonjs',
 		devtoolModuleFilenameTemplate: '../../[resource-path]'
 	},
@@ -63,6 +63,9 @@ const webExtensionConfig = {
 		}]
 	},
 	plugins: [
+		 new webpack.ProvidePlugin({
+            Buffer: ['buffer', 'Buffer'],
+        }),
 		new webpack.ProvidePlugin({
 			process: 'process/browser', // provide a shim for the global `process` variable
 		}),
@@ -79,4 +82,66 @@ const webExtensionConfig = {
 	},
 };
 
-module.exports = [ webExtensionConfig ];
+/** @type WebpackConfig */
+
+const browerServerConfig = {
+	mode:"none",
+	target:"webworker", 
+	entry: {
+		'server': './server/src/server.ts'
+	},
+	output: {
+		filename: "[name].js",
+		path: path.join(__dirname,'server','out','web'),
+		libraryTarget: 'var',
+		library: 'serverExportVar'
+	},
+	resolve: {
+		mainFields: ['module', 'main'],
+		extensions: ['.ts','.js'], // support ts-files and js-files
+		alias: {},
+		fallback: {
+			'path': require.resolve("path-browserify"),
+			'http': require.resolve('stream-http'),
+			'crypto': require.resolve('crypto-browserify'),
+			'buffer': require.resolve('buffer/'),
+			'https': require.resolve('https-browserify'),
+			'url':require.resolve('url/'),
+			'stream':require.resolve('stream-browserify'),
+			'vm': require.resolve('vm-browserify'),
+			// Webpack 5 no longer polyfills Node.js core modules automatically.
+			// see https://webpack.js.org/configuration/resolve/#resolvefallback
+			// for the list of Node.js core module polyfills.
+			'assert': require.resolve('assert'),
+			'fs':false,
+			'child_process':false,
+			'zlib':require.resolve('browserify-zlib'),
+			'net':false,
+			'tls':false,
+			'constants':false,
+			'tty':false
+		},
+	},
+	module: {
+		rules: [
+			{
+				test: /\.ts$/,
+				exclude: /node_modules/,
+				use: [
+					{
+						loader: 'ts-loader',
+					},
+				],
+			},
+		],
+	},
+	externals: {
+		vscode: 'commonjs vscode', // ignored because it doesn't exist
+	},
+	performance: {
+		hints: false,
+	},
+	devtool: 'source-map',
+}
+
+module.exports =  [ browerClientConfig, browerServerConfig];
