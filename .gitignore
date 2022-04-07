@@ -2,7 +2,7 @@ out
 node_modules
 .vscode-test
 log
-client/out
-server/out
+client/dist
+server/dist
 .DS_Store
 *.vsix

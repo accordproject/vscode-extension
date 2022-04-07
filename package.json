@@ -187,7 +187,7 @@
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
-		"package:vsix": "node ./node_modules/vsce/out/vsce package",
+		"package:vsix": "vsce package",
 		"compile": "tsc -b",
 		"watch": "tsc -b -w",
 		"postinstall": "cd client && npm install && cd ../server && npm install && cd ..",

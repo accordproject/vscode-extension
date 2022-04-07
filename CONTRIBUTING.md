@@ -50,12 +50,6 @@ npm run package:vsix
 5. Install and restart VSCode
 6. Open a .cto or .ergo file
 
-### Travis CI build
-
-Developers no longer need a manual build, once you have created a pull request from your private Github repository. The build will be automatically performed by Travis.
-A successful build will create an installable VSIX file on the build machine.
-The public release version number is defined in the package.json file. The 3 package.json files should all have the same version number (root/client and server).
-
 #### Publish Release
 
 Below are steps for publishing a release.
