@@ -70,15 +70,14 @@ function getTemplateModel(parentDir) {
 }
 
 /**
- * Gets the root file path for a template, from a path under the root, by walking
- * up the directory hierarchy looking for a package.json file that contains the 
- * 'accordproject' key. If a valid package.json is missing then a diagnostic error is
- * pushed for the textDocument and null is returned
+ * Gets the root file path for a template or set of models, from a path under the root, 
+ * by walking up the directory hierarchy looking for a package.json file. If the file
+ * is not found then directory containing pathStr is returned.
  * @param {string} pathStr the full path
  * @param {TextDocument} textDocument the textDocument we are processing
  * @returns {string} the root file path
  */
-function getTemplateRoot(pathStr, textDocument, diagnosticMap) {
+function getProjectRoot(pathStr) {
 
     let currentPath = pathStr;
 
@@ -86,22 +85,32 @@ function getTemplateRoot(pathStr, textDocument, diagnosticMap) {
         // connection.console.log( `- ${currentPath}`);
 
         try {
-            const packageJsonContents = getEditedFileContents(currentPath + '/package.json');
-            const packageJson = JSON.parse(packageJsonContents);
-            if(packageJson.accordproject) {
-                return currentPath;
-            }
+            getEditedFileContents(currentPath + '/package.json');
+            connection.console.log( `Project root is: ${currentPath}`);
+            return currentPath;
         }
         catch(err) {
             // connection.console.log( `- exception ${err}`);
         }
         currentPath = path.normalize(path.join(currentPath, '..'));
     }
+    return path.basename(path.dirname(pathStr));
+}
 
-    connection.console.log( `Failed to find template path for ${pathStr}`);
-    const error = {message: `${pathStr} is not a sub-folder of an Accord Project template. Ensure a parent folder contains a valid package.json.`};
-    pushDiagnostic(DiagnosticSeverity.Error, textDocument, error, 'template', diagnosticMap);
-    return null;
+/**
+ * Returns true if the project root contains a package.json that
+ * defines an AP template
+ * @param pathStr the project root
+ * @returns {boolean} true if the project is a template
+ */
+function isTemplate(pathStr) {
+    try {
+        const packageJson = getEditedFileContents(pathStr + '/package.json');
+        return JSON.parse(packageJson).accordproject;
+    }
+    catch(err) {
+    }
+    return false;
 }
 
 /**
@@ -284,10 +293,8 @@ async function provideCodeActions(params: CodeActionParams): Promise<CodeAction[
     }
 
     const pathStr = path.resolve(fileUriToPath(textDocument.uri));
-    const diagnosticMap = {
-    }
-    const parentDir = getTemplateRoot(pathStr, textDocument, diagnosticMap);
-    connection.console.log(`- template root: ${parentDir}`);
+    const parentDir = getProjectRoot(pathStr);
+    connection.console.log(`- project root: ${parentDir}`);
 
     const modelFilePath = parentDir + '/model/model.cto';
     connection.console.log(`- modelFilePath: ${modelFilePath}`);
@@ -338,11 +345,12 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
         }
         // this will assemble all the models into a ModelManager
         // and validate - so it needs to always run before we do anything else
+        const projectRoot = getProjectRoot(pathStr);
         const modelValid = await validateModels(textDocument, diagnosticMap, templateCache);
         let ergoValid = true;
 
         // if the model is valid, then we proceed
-        if(modelValid) {
+        if(modelValid && isTemplate(projectRoot)) {
             const grammarValid = await validateGrammar(textDocument, diagnosticMap, templateCache);
 
             if(basename === 'grammar.tem.md' || fileExtension === '.cto' || fileExtension === '.ergo') {
@@ -353,6 +361,9 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
                 // check the sample is valid
                 await parseSampleFile(textDocument, diagnosticMap, templateCache);
             }
+        }
+        else {
+            connection.console.log(`- package.json does not declare a template: ${projectRoot}`);
         }
     
         // send all the diagnostics we have accumulated back to the client
@@ -378,9 +389,9 @@ async function compileErgoFiles(textDocument: TextDocument, diagnosticMap, templ
     try {
         const pathStr = path.resolve(fileUriToPath(textDocument.uri));
         const folder = pathStr.substring(0,pathStr.lastIndexOf("/")+1);
-        const parentDir = getTemplateRoot(pathStr, textDocument, diagnosticMap);
+        const parentDir = getProjectRoot(pathStr);
 
-        if(!parentDir) {
+        if(!isTemplate(parentDir)) {
             return false;
         }
 
@@ -423,10 +434,7 @@ async function validateModels(textDocument: TextDocument, diagnosticMap, templat
     const folder = pathStr.substring(0,pathStr.lastIndexOf("/")+1);
 
     try {
-        const parentDir = getTemplateRoot(pathStr, textDocument, diagnosticMap);
-        if(!parentDir) {
-            return false;
-        }
+        const parentDir = getProjectRoot(pathStr);
         connection.console.log(`*** Validating model files under: ${parentDir}`);
 
         // get the template logic from cache
@@ -498,9 +506,9 @@ async function validateGrammar(textDocument: TextDocument, diagnosticMap, templa
 
     try {
         const pathStr = path.resolve(fileUriToPath(textDocument.uri));
-        const parentDir = getTemplateRoot(pathStr, textDocument, diagnosticMap);
+        const parentDir = getProjectRoot(pathStr);
 
-        if(!parentDir) {
+        if(!isTemplate(parentDir)) {
             return false;
         }
 
@@ -581,8 +589,8 @@ async function parseSampleFile(textDocument: TextDocument, diagnosticMap, templa
 
     try {
         const pathStr = path.resolve(fileUriToPath(textDocument.uri));
-        const parentDir = getTemplateRoot(pathStr, textDocument, diagnosticMap);
-        if(!parentDir || !templateCache[parentDir] || !templateCache[parentDir].parserManager) {
+        const parentDir = getProjectRoot(pathStr);
+        if(!isTemplate(parentDir) || !templateCache[parentDir] || !templateCache[parentDir].parserManager) {
             return false;
         }
 
