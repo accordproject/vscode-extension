@@ -77,7 +77,7 @@ The extention adds code snippets for the following elements of the Ergo language
 | Contract    | contract    |
 
 ## Contact Us
-If you have find any problems or want to make suggestions for future features please create [issues and suggestions on Github](https://github.com/accordproject/cicero-vscode-extension/issues). For any questions please [join](https://accord-project-slack-signup.herokuapp.com/) the Accord Project Slack community and post questions to the `#technology-cicero` channel.
+If you have find any problems or want to make suggestions for future features please create [issues and suggestions on Github](https://github.com/accordproject/cicero-vscode-extension/issues). For any questions please [join](https://discord.com/invite/Zm99SKhhtA) the Accord Project Discord community and post questions to the `#technology-cicero` channel.
 
 ## Acknowledgments
 
@@ -114,7 +114,7 @@ The Accord Project technology is being developed as open source. All the softwar
 
 Find out what’s coming on our [blog][apblog].
 
-Join the Accord Project Technology Working Group [Slack channel][apslack] to get involved!
+Join the Accord Project Technology Working Group [Discord channel][apdiscord] to get involved!
 
 For code contributions, read our [CONTRIBUTING guide][contributing] and information for [DEVELOPERS][developers].
 
@@ -138,7 +138,7 @@ Copyright 2018-2019 Clause, Inc. All trademarks are the property of their respec
 [apmain]: https://accordproject.org/ 
 [apblog]: https://medium.com/@accordhq
 [apdoc]: https://docs.accordproject.org/
-[apslack]: https://accord-project-slack-signup.herokuapp.com
+[apdiscord]: https://discord.com/invite/Zm99SKhhtA
 
 [contributing]: https://github.com/accordproject/cicero-vscode-extension/blob/master/CONTRIBUTING.md
 [developers]: https://github.com/accordproject/cicero-vscode-extension/blob/master/DEVELOPERS.md
