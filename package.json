@@ -34,7 +34,6 @@
 		"onCommand:cicero-vscode-extension.downloadModels",
 		"onCommand:cicero-vscode-extension.viewClassDiagram",
 		"onCommand:cicero-vscode-extension.triggerClause",
-		"onCommand:cicero-vscode-extension.parseClause",
 		"onCommand:cicero-vscode-extension.showPreview"
 	],
 	"main": "./client/out/extension",
@@ -122,11 +121,6 @@
 				"category": "Accord Project"
 			},
 			{
-				"command": "cicero-vscode-extension.parseClause",
-				"title": "Parse",
-				"category": "Accord Project"
-			},
-			{
 				"command": "cicero-vscode-extension.showPreview",
 				"title": "Open Preview",
 				"icon": {
@@ -159,14 +153,9 @@
 					"group": "AccordProject@4"
 				},
 				{
-					"when": "explorerResourceIsFolder",
-					"command": "cicero-vscode-extension.parseClause",
-					"group": "AccordProject@5"
-				},
-				{
 					"when": "resourceLangId == ciceroMark || resourceLangId == concerto",
 					"command": "cicero-vscode-extension.showPreview",
-					"group": "AccordProject@6"
+					"group": "AccordProject@5"
 				}
 			],
 			"editor/title": [
@@ -191,10 +180,6 @@
 				},
 				{
 					"command": "cicero-vscode-extension.triggerClause",
-					"when": "false"
-				},
-				{
-					"command": "cicero-vscode-extension.parseClause",
 					"when": "false"
 				}
 			]

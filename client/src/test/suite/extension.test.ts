@@ -81,14 +81,6 @@ suite('Extension Tests', () => {
     });
   });
 
-  test('should execute parseClause command', () => {
-    const uri = vscode.Uri.file(path.join(rootPath, '../test/data/valid/template/acceptance-of-delivery'));
-
-    vscode.commands.executeCommand('cicero-vscode-extension.parseClause', uri).then((result) => {
-      assert.ok(result);
-    });
-  });
-
   test('should execute showPreview command', () => {
     vscode.commands.executeCommand('cicero-vscode-extension.showPreview').then((result) => {
       assert.ok(result);

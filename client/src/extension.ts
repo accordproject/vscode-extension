@@ -29,8 +29,7 @@ import {
 	exportClassDiagram,
 	triggerClause,
 	getWebviewContent,
-	setOutputChannel,
-	parseClause
+	setOutputChannel
 } from './commandHandlers';
 
 let client: LanguageClient;
@@ -112,8 +111,6 @@ export function activate(context: vscode.ExtensionContext) {
 		.registerCommand('cicero-vscode-extension.exportClassDiagram', exportClassDiagram));
 	context.subscriptions.push(vscode.commands
 		.registerCommand('cicero-vscode-extension.triggerClause', triggerClause));
-	context.subscriptions.push(vscode.commands
-		.registerCommand('cicero-vscode-extension.parseClause', parseClause));
 
 	let currentPanel: vscode.WebviewPanel | undefined = undefined;
 

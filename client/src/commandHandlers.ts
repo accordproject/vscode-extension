@@ -307,60 +307,6 @@ export async function triggerClause(file: vscode.Uri) {
 	return false;
 }
 
-export async function parseClause(file: vscode.Uri) {
-	try {
-		if(!checkTemplate(file)) {
-			return false;
-		}
-
-		outputChannel.show();
-        
-		const optionsPath = path.join(file.path,"options.json")
-		var options = null
-		if(fs.existsSync(optionsPath)){
-			options = JSON.parse(fs.readFileSync(optionsPath,"utf-8"))
-		}
-
-		const parseOptions = options?.parse;
-		
-		await vscode.workspace.saveAll();
-		const template = await Template.fromDirectory(file.path);
-		const clause = new Clause(template);
-		const samplePath = (parseOptions?.samplePath)?path.join(file.path, 'text', parseOptions?.samplePath): path.join(file.path, 'text', 'sample.md');
-
-		if (!fs.existsSync(samplePath)) {
-			vscode.window.showErrorMessage(`Cannot parse: ${samplePath} file was not found.`);
-			return false;
-		}
-
-		const sampleText = fs.readFileSync(samplePath, 'utf8');
-		clause.parse(sampleText, parseOptions?.currentTime, parseOptions?.utcOffset, samplePath);
-
-		outputChannel.appendLine('template');
-		outputChannel.appendLine('========');
-		outputChannel.appendLine(template.getIdentifier());
-		outputChannel.appendLine('');
-
-		outputChannel.appendLine(`${samplePath} parse result`);
-		outputChannel.appendLine('======================');
-		outputChannel.appendLine(JSON.stringify(clause.getData(),null,2));
-		outputChannel.appendLine('');
-
-		if(parseOptions?.outputPath) {
-			outputChannel.appendLine(`Writing output to ${parseOptions?.outputPath}....`);
-			fs.writeFileSync(path.join(file.fsPath,parseOptions?.outputPath), JSON.stringify(clause.getData(),null,2));
-		    outputChannel.appendLine(`Output written to ${parseOptions?.outputPath}`);
-			outputChannel.appendLine('');
-		}
-
-		return true;
-	} catch (error) {
-		vscode.window.showErrorMessage( `Failed to parse clause ${error}`);
-	}
-
-	return false;
-}
-
 async function getHtml() {
 
 	let html = 'To display preview please open a grammar.tem.md or a *.cto file.';
