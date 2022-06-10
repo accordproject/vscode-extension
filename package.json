@@ -159,7 +159,7 @@
 					"group": "AccordProject@4"
 				},
 				{
-					"when": "explorerResourceIsFolder",
+					"when": "resourceLangId == ciceroMark || resourceLangId == markdown",
 					"command": "cicero-vscode-extension.parseClause",
 					"group": "AccordProject@5"
 				},
