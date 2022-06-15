@@ -28,15 +28,16 @@ import {
 	downloadModels,
 	exportClassDiagram,
 	triggerClause,
-	getWebviewContent,
-	setOutputChannel
+	getPreviewWebviewContent,
+	setOutputChannel,
+	parseClause
 } from './commandHandlers';
 
 let client: LanguageClient;
 
 async function onDocumentChange(event) {
 	if (event.document.languageId === 'ciceroMark' || event.document.languageId === 'concerto') {
-		return getWebviewContent();;
+		return getPreviewWebviewContent();;
 	}
 
 	return null;
@@ -111,6 +112,8 @@ export function activate(context: vscode.ExtensionContext) {
 		.registerCommand('cicero-vscode-extension.exportClassDiagram', exportClassDiagram));
 	context.subscriptions.push(vscode.commands
 		.registerCommand('cicero-vscode-extension.triggerClause', triggerClause));
+	context.subscriptions.push(vscode.commands
+		.registerCommand('cicero-vscode-extension.parseClause', parseClause));
 
 	let currentPanel: vscode.WebviewPanel | undefined = undefined;
 
@@ -131,7 +134,7 @@ export function activate(context: vscode.ExtensionContext) {
 					  }
 				);
 
-				currentPanel.webview.html = await getWebviewContent();
+				currentPanel.webview.html = await getPreviewWebviewContent();
 
 				// Reset when the current panel is closed
 				currentPanel.onDidDispose(

@@ -307,7 +307,75 @@ export async function triggerClause(file: vscode.Uri) {
 	return false;
 }
 
-async function getHtml() {
+function getProjectRoot(pathStr) {
+
+    let currentPath = pathStr;
+
+    while(currentPath !== '/' && currentPath.split(":").pop() !== '\\') {
+        // connection.console.log( `- ${currentPath}`);
+
+        try{
+            if(fs.existsSync(currentPath + '/package.json'))
+			    return currentPath;
+        }
+        catch(err) {
+            // connection.console.log( `- exception ${err}`);
+        }
+        currentPath = path.normalize(path.join(currentPath, '..'));
+    }
+    return path.basename(path.dirname(pathStr));
+}
+
+export async function parseClause(file: vscode.Uri) {
+	try {	
+		const templateDirectory = getProjectRoot(file.fsPath);
+		await vscode.workspace.saveAll();
+
+		var panel = vscode.window.createWebviewPanel(
+			'parseInput',
+			'Parse Input',
+			vscode.ViewColumn.Beside,
+			{
+			  // Enable scripts in the webview
+			  enableScripts: true
+			}
+		);
+
+		panel.webview.html = await getParseWebviewContent(path.relative(templateDirectory,file.path));
+
+		panel.webview.onDidReceiveMessage(
+			async (message) => {
+			  const {samplePath,outputPath,utcOffset,currentTime} = message;
+			  const template = await Template.fromDirectory(templateDirectory);
+		      const clause = new Clause(template);
+			  const sampleText = fs.readFileSync(path.resolve(templateDirectory,samplePath), 'utf8');
+
+		      clause.parse(sampleText, currentTime, utcOffset, path.resolve(templateDirectory,samplePath));	  
+
+			  outputChannel.show();
+
+			  outputChannel.appendLine(`${samplePath} parse result`);
+		      outputChannel.appendLine('======================');
+		      outputChannel.appendLine(JSON.stringify(clause.getData(),null,2));
+		      outputChannel.appendLine('');
+
+
+			  fs.writeFileSync( path.resolve(templateDirectory,outputPath), JSON.stringify(clause.getData(),null,2));
+			  outputChannel.appendLine(`Output written to ${outputPath}`);
+			  outputChannel.appendLine('');
+			},
+			null
+	    )
+		
+		return true;
+	} catch (error) {
+		vscode.window.showErrorMessage( `Failed to parse clause ${error}`);
+	}
+
+	return false;
+}
+
+async function getPreviewHtml() {
 
 	let html = 'To display preview please open a grammar.tem.md or a *.cto file.';
 
@@ -353,9 +421,164 @@ ${result.mermaid}
 	return html;
 }
 
+function getParseWebviewContent(samplePath){
+    
+    const defaultOutPath = samplePath+".json";
+	const html = getParseWebviewHtml(samplePath,defaultOutPath);
 
-export async function getWebviewContent() {
-	const html = await getHtml();
+	const styles = `<style>
+	* {
+	  box-sizing: border-box;
+	}
+	
+	input, select, textarea {
+	  width: 80%;
+	  padding: 12px;
+	  border-radius: 4px;
+	  resize: vertical;
+	}
+	
+	label {
+	  padding: 12px 12px 12px 0;
+	  display: inline-block;
+	}
+	
+	button {
+	  background-color: #04AA6D;
+	  color: white;
+	  padding: 12px 20px;
+	  border: none;
+	  border-radius: 4px;
+	  cursor: pointer;
+	  float: left;
+	}
+	
+	button:hover {
+	  background-color: #45a049;
+	}
+	
+	.container {
+	  border-radius: 5px;
+	  padding: 20px;
+	}
+	
+	.col-25 {
+	  float: left;
+	  width: 25%;
+	  margin-top: 6px;
+	}
+	
+	.col-75 {
+	  float: left;
+	  width: 75%;
+	  margin-top: 6px;
+	}
+	
+	/* Clear floats after the columns */
+	.row:after {
+	  content: "";
+	  display: table;
+	  clear: both;
+	}
+
+	.button{
+		width: 30%;
+	}
+
+	.button-container{
+		text-align: center;
+	}
+	
+	@media screen and (max-width: 600px) {
+	   input[type=submit] {
+		width: 100%;
+		margin-top: 0;
+	  }
+	}
+	</style>`
+
+	return `<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Accord Project</title>
+		<style>${styles}</style>
+	</head>
+	<body>
+       ${html}
+	</body>
+	<script>
+		let btn = document.getElementById("button");
+		const vscode = acquireVsCodeApi();
+        btn.addEventListener('click', event => {
+			vscode.postMessage({
+				command: 'parse',
+				outputPath: document.getElementById("outputPath").value,
+				samplePath: document.getElementById("samplePath").value,
+				utcOffset: document.getElementById("utcOffset").value,
+				currentTime: document.getElementById("currentTime").value,
+			})
+        });
+
+    </script>
+	</html>`;
+}
+
+function getParseWebviewHtml(defaultSamplePath,defaultOutPath){
+
+	return `
+	<div class="container">
+	<div class="row">
+	<h4>*Paths mentioned here are relative to the template directory</h4>
+    </div>
+	  <div class="row">
+		<div class="col-25">
+		  <label for="samplePath">Sample Path</label>
+		</div>
+		<div class="col-75">
+		  <input type="text" id="samplePath" name="samplePath" placeholder="Choose Sample Path" value=${defaultSamplePath} >
+		</div>
+	  </div>
+	  <br>
+	  <div class="row">
+		<div class="col-25">
+		  <label for="outputPath">Ouput Path</label>
+		</div>
+		<div class="col-75">
+		  <input type="text" id="outputPath" name="outputPath" placeholder="Choose Output Path" value=${defaultOutPath}>
+		</div>
+	  </div>
+	  <br>
+	  <div class="row">
+		<div class="col-25">
+		  <label for="utcOffset">UTC Offset</label>
+		</div>
+		<div class="col-75">
+		  <input type="number" id="utcOffset" name="utcOffset" placeholder="UTC Offset" value="0">
+		</div>
+	  </div>
+	  <br>
+	  <div class="row">
+		<div class="col-25">
+		  <label for="currentTime">Current Time</label>
+		</div>
+		<div class="col-75">
+		  <input type="text" id="currentTime" name="currentTime" placeholder="Current Time">
+		</div>
+	  </div>	  
+	  <br>
+	  <r>
+	  <br>
+	  <div class="row">
+	  <button type="submit" id="button" class="button">Parse</button>
+	  </div>
+	</div>`
+
+}
+
+export async function getPreviewWebviewContent() {
+	const html = await getPreviewHtml();
 
 	const styles = `
 	table, th, td {
