@@ -127,6 +127,11 @@
 				"category": "Accord Project"
 			},
 			{
+				"command": "cicero-vscode-extension.verifyTemplate",
+				"title": "Verify",
+				"category": "Accord Project"
+			},
+			{
 				"command": "cicero-vscode-extension.showPreview",
 				"title": "Open Preview",
 				"icon": {
@@ -164,9 +169,14 @@
 					"group": "AccordProject@5"
 				},
 				{
+					"when": "explorerResourceIsFolder",
+					"command": "cicero-vscode-extension.verifyTemplate",
+					"group": "AccordProject@6"
+				},
+				{
 					"when": "resourceLangId == ciceroMark || resourceLangId == concerto",
 					"command": "cicero-vscode-extension.showPreview",
-					"group": "AccordProject@6"
+					"group": "AccordProject@7"
 				}
 			],
 			"editor/title": [
@@ -179,6 +189,10 @@
 			"commandPalette": [
 				{
 					"command": "cicero-vscode-extension.exportArchive",
+					"when": "false"
+				},
+				{
+					"command": "cicero-vscode-extension.verifyTemplate",
 					"when": "false"
 				},
 				{
