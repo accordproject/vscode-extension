@@ -375,7 +375,7 @@ export async function parseClause(file: vscode.Uri) {
 	return false;
 }
 
-export async function verifyTemplate(file: vscode.Uri) {
+export async function verifyTemplateSignature(file: vscode.Uri) {
 	try {	
 		if(!checkTemplate(file)) {
 			return false;

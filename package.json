@@ -127,8 +127,8 @@
 				"category": "Accord Project"
 			},
 			{
-				"command": "cicero-vscode-extension.verifyTemplate",
-				"title": "Verify",
+				"command": "cicero-vscode-extension.verifyTemplateSignature",
+				"title": "Verify Signature",
 				"category": "Accord Project"
 			},
 			{
@@ -170,7 +170,7 @@
 				},
 				{
 					"when": "explorerResourceIsFolder",
-					"command": "cicero-vscode-extension.verifyTemplate",
+					"command": "cicero-vscode-extension.verifyTemplateSignature",
 					"group": "AccordProject@6"
 				},
 				{
@@ -192,7 +192,7 @@
 					"when": "false"
 				},
 				{
-					"command": "cicero-vscode-extension.verifyTemplate",
+					"command": "cicero-vscode-extension.verifyTemplateSignature",
 					"when": "false"
 				},
 				{

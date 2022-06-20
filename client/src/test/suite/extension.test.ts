@@ -92,7 +92,7 @@ suite('Extension Tests', () => {
   test('should execute verify template command', () => {
     const uri = vscode.Uri.file(path.join(rootPath, '../test/data/valid/template/acceptance-of-delivery'));
 
-    vscode.commands.executeCommand('cicero-vscode-extension.verifyTemplate', uri).then((result) => {
+    vscode.commands.executeCommand('cicero-vscode-extension.verifyTemplateSignature', uri).then((result) => {
       assert.ok(result);
     });
   });
