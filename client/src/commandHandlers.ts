@@ -375,6 +375,27 @@ export async function parseClause(file: vscode.Uri) {
 	return false;
 }
 
+export async function verifyTemplateSignature(file: vscode.Uri) {
+	try {	
+		if(!checkTemplate(file)) {
+			return false;
+		}
+		await vscode.workspace.saveAll();
+
+		const template = await Template.fromDirectory(file.path);
+
+        await template.verifyTemplateSignature();
+		
+		vscode.window.showInformationMessage( `Template signatures verified successfully!` )
+
+		return true;
+	} catch (error) {
+		vscode.window.showErrorMessage( `Verification ${error}`);
+	}
+
+	return false;
+}
+
 async function getPreviewHtml() {
 
 	let html = 'To display preview please open a grammar.tem.md or a *.cto file.';
