@@ -22,10 +22,12 @@ import { LanguageClient ,LanguageClientOptions } from 'vscode-languageclient/bro
 
 import {
 	getPreviewWebviewContent,
-	setOutputChannel
+	setOutputChannel,
+	downloadModels,
+	exportClassDiagram,
+	parseClause,
+	exportArchive
 } from './webCommandHandlers';
-
-let client: LanguageClient;
 
 async function onDocumentChange(event) {
 	if (event.document.languageId === 'ciceroMark' || event.document.languageId === 'concerto') {
@@ -47,12 +49,14 @@ export async function activate(context: vscode.ExtensionContext) {
 	setOutputChannel(outputChannel);
 
 	// Register commands
-	/** 
+	context.subscriptions.push(vscode.commands
+		.registerCommand('cicero-vscode-extension.parseClause', parseClause));
+	context.subscriptions.push(vscode.commands
+			.registerCommand('cicero-vscode-extension.exportArchive', exportArchive));
 	context.subscriptions.push(vscode.commands
 		.registerCommand('cicero-vscode-extension.downloadModels', downloadModels));
 	context.subscriptions.push(vscode.commands
 		.registerCommand('cicero-vscode-extension.exportClassDiagram', exportClassDiagram));
-	*/
 
 	let currentPanel: vscode.WebviewPanel | undefined = undefined;
 

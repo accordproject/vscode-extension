@@ -15,19 +15,25 @@
 
 import * as vscode from 'vscode';
 import * as path from 'path';
+import { URI, Utils } from 'vscode-uri'
 
 import MemoryWriter from './memorywriter';
 import MermaidVisitor from './mermaidvisitor';
+import FileWriter from './filewriter';
 import {
 	LogicManager
 } from '@accordproject/ergo-compiler';
 
 const ModelFile = require('@accordproject/concerto-core').ModelFile;
+const CodeGen = require('@accordproject/concerto-tools').CodeGen;
+const Clause = require('@accordproject/cicero-core').Clause;
+const Template = require('@accordproject/cicero-core').Template;
 
 var md = require('markdown-it')()
 	.use(require('@accordproject/markdown-it-template'))
 	.use(require('@accordproject/markdown-it-cicero'));
 
+import {fromDirectory} from './utils';
 let outputChannel: vscode.OutputChannel
 
 export function setOutputChannel(oc: vscode.OutputChannel) {
@@ -37,25 +43,18 @@ export function setOutputChannel(oc: vscode.OutputChannel) {
 async function getModelManager(ctoFile: vscode.Uri) {
 	try {
 
-		console.log(ctoFile.fsPath)
-
 		const modelRoot = path.dirname(ctoFile.fsPath)
 
-		console.log(modelRoot);
 		
 		const modelFileName = ctoFile.fsPath;
-
-		console.log(modelFileName);
 
 		const logicManager = new LogicManager('es6');
 		const modelManager = logicManager.getModelManager();
 		modelManager.clearModelFiles();
-		modelManager.modelFiles;
 		const loadedModelFiles = [];
 
 		// load the edited file
 		const contents = getDocument(modelFileName);
-		console.log(contents)
 		const rootModelFile = new ModelFile(modelManager, contents, modelFileName);
 		outputChannel.appendLine(`Loaded model file: ${rootModelFile.getNamespace()}`);
 		loadedModelFiles.push(rootModelFile);
@@ -70,7 +69,6 @@ async function getModelManager(ctoFile: vscode.Uri) {
 
 			// Find all cto under the directory that contains the cto file
 			const modelFiles = await vscode.workspace.findFiles(new vscode.RelativePattern(modelRoot, '*.cto'));
-			console.log(modelFiles);
 
 			// read the model files
 			for (const file of modelFiles) {
@@ -103,6 +101,311 @@ async function getModelManager(ctoFile: vscode.Uri) {
 	}
 
 	return null;
+}
+
+export async function downloadModels(file: vscode.Uri) {
+	try {
+		const outputPath = Utils.resolvePath(file,'..');
+		const modelManager = await getModelManager(file)
+
+		if( modelManager ) {
+			const modelFiles = modelManager.getModelFiles();
+
+			const includeExternalModels= true;
+			modelFiles.forEach(async function (modelFile) {
+				if (modelFile.external && !includeExternalModels) {
+					return;
+				}
+				// Always assume file names have been normalized from `\` to `/`
+				const modelFilename = (modelFile.fileName).split('/').pop();
+				const modelFileUri = outputPath.with({ path: path.join(outputPath.path, modelFilename) });
+				await vscode.workspace.fs.writeFile(modelFileUri, Buffer.from(modelFile.definitions, 'utf8'));
+			});
+		}
+		await vscode.commands.executeCommand(`workbench.files.action.refreshFilesExplorer`);
+		vscode.window.showInformationMessage(`Downloaded models to ${outputPath.fsPath}`);	
+		return true;
+	} catch (error) {
+		vscode.window.showErrorMessage( `Failed to download models ${error}`);
+	}
+
+	return false;
+}
+
+export async function exportClassDiagram(file: vscode.Uri) {
+	try {
+		const outputPath = path.dirname(file.path);
+		const modelManager = await getModelManager(file);
+
+		if(modelManager) {
+			const PlantUMLVisitor = CodeGen.PlantUMLVisitor;
+
+			const visitor = new PlantUMLVisitor();
+			let parameters = {} as any;
+			parameters.fileWriter = new FileWriter(outputPath);
+			modelManager.accept(visitor, parameters);
+	
+			vscode.window.showInformationMessage(`Exported class diagram to ${outputPath}`);
+			return true;	
+		}
+	} catch (error) {
+		vscode.window.showErrorMessage( `Failed to generate diagram ${error}`);
+	}
+
+	return false;
+}
+
+
+function getParseWebviewHtml(defaultSamplePath,defaultOutPath){
+
+	return `
+	<div class="container">
+	<div class="row">
+	<h4>*Paths mentioned here are relative to the template directory</h4>
+    </div>
+	  <div class="row">
+		<div class="col-25">
+		  <label for="samplePath">Sample Path</label>
+		</div>
+		<div class="col-75">
+		  <input type="text" id="samplePath" name="samplePath" placeholder="Choose Sample Path" value=${defaultSamplePath} >
+		</div>
+	  </div>
+	  <br>
+	  <div class="row">
+		<div class="col-25">
+		  <label for="outputPath">Ouput Path</label>
+		</div>
+		<div class="col-75">
+		  <input type="text" id="outputPath" name="outputPath" placeholder="Choose Output Path" value=${defaultOutPath}>
+		</div>
+	  </div>
+	  <br>
+	  <div class="row">
+		<div class="col-25">
+		  <label for="utcOffset">UTC Offset</label>
+		</div>
+		<div class="col-75">
+		  <input type="number" id="utcOffset" name="utcOffset" placeholder="UTC Offset" value="0">
+		</div>
+	  </div>
+	  <br>
+	  <div class="row">
+		<div class="col-25">
+		  <label for="currentTime">Current Time</label>
+		</div>
+		<div class="col-75">
+		  <input type="text" id="currentTime" name="currentTime" placeholder="Current Time">
+		</div>
+	  </div>	  
+	  <br>
+	  <r>
+	  <br>
+	  <div class="row">
+	  <button type="submit" id="button" class="button">Parse</button>
+	  </div>
+	</div>`
+
+}
+
+function getParseWebviewContent(samplePath){
+    
+    const defaultOutPath = samplePath+".json";
+	const html = getParseWebviewHtml(samplePath,defaultOutPath);
+
+	const styles = `<style>
+	* {
+	  box-sizing: border-box;
+	}
+	
+	input, select, textarea {
+	  width: 80%;
+	  padding: 12px;
+	  border-radius: 4px;
+	  resize: vertical;
+	}
+	
+	label {
+	  padding: 12px 12px 12px 0;
+	  display: inline-block;
+	}
+	
+	button {
+	  background-color: #04AA6D;
+	  color: white;
+	  padding: 12px 20px;
+	  border: none;
+	  border-radius: 4px;
+	  cursor: pointer;
+	  float: left;
+	}
+	
+	button:hover {
+	  background-color: #45a049;
+	}
+	
+	.container {
+	  border-radius: 5px;
+	  padding: 20px;
+	}
+	
+	.col-25 {
+	  float: left;
+	  width: 25%;
+	  margin-top: 6px;
+	}
+	
+	.col-75 {
+	  float: left;
+	  width: 75%;
+	  margin-top: 6px;
+	}
+	
+	/* Clear floats after the columns */
+	.row:after {
+	  content: "";
+	  display: table;
+	  clear: both;
+	}
+
+	.button{
+		width: 30%;
+	}
+
+	.button-container{
+		text-align: center;
+	}
+	
+	@media screen and (max-width: 600px) {
+	   input[type=submit] {
+		width: 100%;
+		margin-top: 0;
+	  }
+	}
+	</style>`
+
+	return `<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Accord Project</title>
+		<style>${styles}</style>
+	</head>
+	<body>
+       ${html}
+	</body>
+	<script>
+		let btn = document.getElementById("button");
+		const vscode = acquireVsCodeApi();
+        btn.addEventListener('click', event => {
+			vscode.postMessage({
+				command: 'parse',
+				outputPath: document.getElementById("outputPath").value,
+				samplePath: document.getElementById("samplePath").value,
+				utcOffset: document.getElementById("utcOffset").value,
+				currentTime: document.getElementById("currentTime").value,
+			})
+        });
+
+    </script>
+	</html>`;
+}
+
+export async function parseClause(file: vscode.Uri) {
+	try {	
+		const templateDirectory = Utils.resolvePath(Utils.dirname(file),'..');
+		await vscode.workspace.saveAll();
+
+		var panel = vscode.window.createWebviewPanel(
+			'parseInput',
+			'Parse Input',
+			vscode.ViewColumn.Beside,
+			{
+			  // Enable scripts in the webview
+			  enableScripts: true
+			}
+		);
+
+		panel.webview.html = await getParseWebviewContent(path.relative(templateDirectory.fsPath,file.path));
+
+		panel.webview.onDidReceiveMessage(
+			async (message) => {
+			  const {samplePath,outputPath,utcOffset,currentTime} = message;
+			  const template = await fromDirectory(Template,templateDirectory.fsPath);
+		      const clause = new Clause(template);
+			  const sampleText = Buffer.from(await vscode.workspace.fs.readFile(URI.file(path.resolve(templateDirectory.fsPath,samplePath)))).toString();
+
+		      clause.parse(sampleText, currentTime, utcOffset, path.resolve(templateDirectory.fsPath,samplePath));	  
+
+			  outputChannel.show();
+
+			  outputChannel.appendLine(`${samplePath} parse result`);
+		      outputChannel.appendLine('======================');
+		      outputChannel.appendLine(JSON.stringify(clause.getData(),null,2));
+		      outputChannel.appendLine('');
+
+			  await vscode.workspace.fs.writeFile( URI.file(path.resolve(templateDirectory.fsPath,outputPath)), Buffer.from(JSON.stringify(clause.getData(),null,2),'utf-8'));
+			  outputChannel.appendLine(`Output written to ${outputPath}`);
+			  outputChannel.appendLine('');
+			},
+			null
+	    )
+		
+		return true;
+	} catch (error) {
+		vscode.window.showErrorMessage( `Failed to parse clause ${error}`);
+	}
+
+	return false;
+}
+
+async function checkTemplate(file: vscode.Uri) {
+	const packageJsonPath = path.join(file.fsPath, 'package.json');
+	// vscode.window.showInformationMessage(`Loading template from ${packageJsonPath}`);
+
+	const packageJsonContents = Buffer.from(await vscode.workspace.fs.readFile(URI.file(packageJsonPath)));
+
+	if(!packageJsonContents) {
+		vscode.window.showErrorMessage('Template package.json file was not found.');
+		return false;
+	}
+
+	try {
+		const packageJson = JSON.parse(packageJsonContents.toString());
+		if(!packageJson.accordproject) {
+			vscode.window.showErrorMessage('package.json does not define a Cicero template.');
+			return false;
+		}
+	}
+	catch(error) {
+		vscode.window.showErrorMessage('package.json contents is invalid.');
+		return false;
+	}
+
+	return true;
+}
+
+export async function exportArchive(file: vscode.Uri) {
+	try {
+		if(!await checkTemplate(file)) {
+			return false;
+		}
+
+		await vscode.workspace.saveAll();
+		const template = await await fromDirectory(Template,file.fsPath);;
+		const archive = await template.toArchive('ergo');
+
+		const outputPath = path.join(file.path, `${template.getIdentifier()}.cta`);
+		
+		await vscode.workspace.fs.writeFile( URI.file(outputPath), Buffer.from(archive));
+		vscode.window.showInformationMessage(`Created archive ${outputPath}`);
+		return true;
+	} catch (error) {
+		vscode.window.showErrorMessage( `Failed to export archive ${error}`);
+	}
+
+	return false;
 }
 
 export function getDocument(file) {

@@ -20,13 +20,13 @@ import * as glob from 'glob';
 
 import MemoryWriter from './memorywriter';
 import MermaidVisitor from './mermaidvisitor';
+import FileWriter from './filewriter';
 import {
 	LogicManager
 } from '@accordproject/ergo-compiler';
 
 const Template = require('@accordproject/cicero-core').Template;
 const CodeGen = require('@accordproject/concerto-tools').CodeGen;
-const FileWriter = require('@accordproject/concerto-tools').FileWriter;
 const Clause = require('@accordproject/cicero-core').Clause;
 const Engine = require('@accordproject/cicero-engine').Engine;
 const ModelFile = require('@accordproject/concerto-core').ModelFile;

@@ -39,15 +39,26 @@ const browerClientConfig = {
 			// see https://webpack.js.org/configuration/resolve/#resolvefallback
 			// for the list of Node.js core module polyfills.
 			'fs':false,
+			'tls': false,
+            'net': false,  
+			'child_process': false,         
+            'crypto': require.resolve('crypto-browserify'),
+            'stream': require.resolve('stream-browserify'),
+            'http': require.resolve('stream-http'),
+            'https': require.resolve('https-browserify'),
+            'zlib': require.resolve('browserify-zlib'),
+			'vm2': require.resolve('vm-browserify'),
 		}
 	},
 	module: {
 		rules: [{
-			test: /\.ts$/,
+			test: /\.(ts|js)x?$/,
 			exclude: /node_modules/,
-			use: [{
-				loader: 'ts-loader'
-			}]
+			loader: 'babel-loader'
+		},
+		{
+			test: /\.ne$/,
+			use:['raw-loader']
 		}]
 	},
 	plugins: [
@@ -58,7 +69,15 @@ const browerClientConfig = {
 			process: 'process/browser', // provide a shim for the global `process` variable
 		}),
 		new NodePolyfillPlugin(),
-
+        new webpack.DefinePlugin({
+            'process.env': {
+                'NODE_ENV': JSON.stringify('production')
+            }
+        }),
+        new webpack.IgnorePlugin({
+            resourceRegExp: /^\.$/,
+            contextRegExp: /jsdom$/,
+        })
 	],
 	externals: {
 		'vscode': 'commonjs vscode', // ignored because it doesn't exist
