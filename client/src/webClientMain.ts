@@ -16,8 +16,6 @@
 
 import * as vscode from 'vscode';
 
-//import { ExtensionContext, Uri } from 'vscode';
-
 import { LanguageClient ,LanguageClientOptions } from 'vscode-languageclient/browser';
 
 import {
