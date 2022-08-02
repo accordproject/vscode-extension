@@ -40,13 +40,13 @@ const browerClientConfig = {
 			// for the list of Node.js core module polyfills.
 			'fs':false,
 			'tls': false,
-            'net': false,  
-			'child_process': false,         
-            'crypto': require.resolve('crypto-browserify'),
-            'stream': require.resolve('stream-browserify'),
-            'http': require.resolve('stream-http'),
-            'https': require.resolve('https-browserify'),
-            'zlib': require.resolve('browserify-zlib'),
+            		'net': false,  
+	   	 	'child_process': false,         
+            		'crypto': require.resolve('crypto-browserify'),
+            		'stream': require.resolve('stream-browserify'),
+            		'http': require.resolve('stream-http'),
+            		'https': require.resolve('https-browserify'),
+            		'zlib': require.resolve('browserify-zlib'),
 			'vm2': require.resolve('vm-browserify'),
 		}
 	},
@@ -63,21 +63,21 @@ const browerClientConfig = {
 	},
 	plugins: [
 		 new webpack.ProvidePlugin({
-            Buffer: ['buffer', 'Buffer'],
-        }),
-		new webpack.ProvidePlugin({
+            		Buffer: ['buffer', 'Buffer'],
+        	 }),
+		 new webpack.ProvidePlugin({
 			process: 'process/browser', // provide a shim for the global `process` variable
-		}),
-		new NodePolyfillPlugin(),
-        new webpack.DefinePlugin({
-            'process.env': {
-                'NODE_ENV': JSON.stringify('production')
-            }
-        }),
-        new webpack.IgnorePlugin({
-            resourceRegExp: /^\.$/,
-            contextRegExp: /jsdom$/,
-        })
+		 }),
+		 new NodePolyfillPlugin(),
+        	 new webpack.DefinePlugin({
+            		'process.env': {
+                		'NODE_ENV': JSON.stringify('production')
+            		}
+        	 }),
+       		 new webpack.IgnorePlugin({
+        	    resourceRegExp: /^\.$/,
+         	    contextRegExp: /jsdom$/,
+       		 })
 	],
 	externals: {
 		'vscode': 'commonjs vscode', // ignored because it doesn't exist
