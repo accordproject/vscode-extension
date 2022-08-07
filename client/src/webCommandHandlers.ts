@@ -393,7 +393,7 @@ export async function exportArchive(file: vscode.Uri) {
 		}
 
 		await vscode.workspace.saveAll();
-		const template = await await fromDirectory(Template,file.fsPath);;
+		const template = await fromDirectory(Template,file.fsPath);;
 		const archive = await template.toArchive('ergo');
 
 		const outputPath = path.join(file.path, `${template.getIdentifier()}.cta`);

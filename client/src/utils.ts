@@ -73,7 +73,7 @@ async function loadFileBuffer(path, fileName, required=false) {
 	}
 	catch(e) {
         if(required){
-            throw new Error(`Failed to find ${fileName} in directory ${e}`);
+            throw new Error(`Failed to find ${fileName} in directory error: ${e}`);
         }
 	}
 	return null;
@@ -104,7 +104,7 @@ async function loadFileContents(path, fileName, json=false, required=false) {
 	}
 	catch(e){
         if(required){
-            throw new Error(`Failed to find ${fileName} in directory ${e}`);
+            throw new Error(`Failed to find ${fileName} in directory error: ${e}`);
         }
 	}
 
