@@ -36,7 +36,7 @@ var md = require('markdown-it')()
 import {fromDirectory} from './utils';
 let outputChannel: vscode.OutputChannel
 
-export function setOutputChannel(oc: vscode.OutputChannel) {
+export function setOutputChannelForCommonCommands(oc: vscode.OutputChannel) {
 	outputChannel = oc;
 }
 

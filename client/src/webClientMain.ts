@@ -20,7 +20,7 @@ import { LanguageClient ,LanguageClientOptions } from 'vscode-languageclient/bro
 
 import {
 	getPreviewWebviewContent,
-	setOutputChannel,
+	setOutputChannelForCommonCommands,
 	downloadModels,
 	exportClassDiagram,
 	parseClause,
@@ -44,7 +44,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	// create the output channel
 	const outputChannel = vscode.window.createOutputChannel('Cicero');
-	setOutputChannel(outputChannel);
+	setOutputChannelForCommonCommands(outputChannel);
 
 	// Register commands
 	context.subscriptions.push(vscode.commands

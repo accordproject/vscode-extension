@@ -4,34 +4,35 @@ const fsPath = require('path');
 const languageTagRegex = require('ietf-language-tag-regex');
 
 const vscode = require('vscode')
+import { FileType } from 'vscode';
 import { URI } from 'vscode-uri';
+const templateLoader = require('@accordproject/cicero-core').TemplateLoader;
 
 // Matches 'sample.md' or 'sample_TAG.md' where TAG is an IETF language tag (BCP 47)
 const IETF_REGEXP = languageTagRegex({ exact: false }).toString().slice(1,-2);
 const SAMPLE_FILE_REGEXP = xregexp('text[/\\\\]sample(_(' + IETF_REGEXP + '))?.md$');
 
 
-function normalizeNLs(contents){
-        // we replace all \r and \n with \n
-        let text =  contents.replace(/\r/gm,'');
-        return text;
-}
-
-function registerFormulas(parserManager,logicManager){
-	const formulas = parserManager.getFormulas();
-	formulas.forEach(x => {
-		logicManager.addTemplateFile(x.code,x.name);
-	});
-}
-
+/**
+     * Loads the contents of all files under a path that match a regex
+     * Note that any directories called node_modules are ignored.
+     * @internal
+     * @param {*} path the file path
+     * @param {RegExp} regex the regex to match files
+     * @return {Promise<object[]>} a promise to an array of objects with the name and contents of the files
+*/
 async function loadFilesContents(path, regex) {
 
 	const subdirs = await vscode.workspace.fs.readDirectory(URI.parse(path));
-	const result = await Promise.all(subdirs.map(async (subdir) => {
-	// subdir[1]=1
-	const res = fsPath.resolve(path, subdir[0]);
 
-		if(subdir[1]==2){
+	const result = await Promise.all(subdirs.map(async (subdir) => {
+        // subdir an array where subdir[0] is string representing path to file/directory within 
+        // and subdir[1] represents whether the path leads to a folder or a file
+	    const res = fsPath.resolve(path, subdir[0]);
+
+        // if the subdir is a directory then we call this function recursively on that directory
+        // else we return the file contents of the file as result
+		if(subdir[1]==FileType.Directory){
 			if( /.*node_modules$/.test(res) === false) {
 				return loadFilesContents(res, regex);
 			}
@@ -51,9 +52,19 @@ async function loadFilesContents(path, regex) {
 			}
 		}
 	}));
+
 	return result.reduce((a, f) => a.concat(f), []).filter((f) => f !== null);
 }
 
+/**
+     * Loads a file as buffer from a directory, displaying an error if missing
+     * @internal
+     * @param {*} path the root path
+     * @param {string} fileName the relative file name
+     * @param {boolean} required whether the file is required
+     * @return {Promise<Buffer>} a promise to the buffer of the file or null if
+     * it does not exist and required is false
+*/
 async function loadFileBuffer(path, fileName, required=false) {
 	const filePath = fsPath.resolve(path, fileName);
 
@@ -61,11 +72,23 @@ async function loadFileBuffer(path, fileName, required=false) {
 		return await vscode.workspace.fs.readFile(URI.file(filePath));
 	}
 	catch(e) {
-		return null;
+        if(required){
+            throw new Error(`Failed to find ${fileName} in directory ${e}`);
+        }
 	}
 	return null;
 }
 
+/**
+     * Loads a required file from a directory, displaying an error if missing
+     * @internal
+     * @param {*} path the root path
+     * @param {string} fileName the relative file name
+     * @param {boolean} json if true the file is converted to a JS Object using JSON.parse
+     * @param {boolean} required whether the file is required
+     * @return {Promise<string>} a promise to the contents of the file or null if it does not exist and
+     * required is false
+*/
 async function loadFileContents(path, fileName, json=false, required=false) {
 	const filePath = fsPath.resolve(path, fileName);
 
@@ -75,18 +98,21 @@ async function loadFileContents(path, fileName, json=false, required=false) {
 			return JSON.parse(contents);
 		}
 		else {
-			return normalizeNLs(contents);
+            // we replace all \r and \n with \n
+			return templateLoader.normalizeNLs(contents);
 		}
 	}
 	catch(e){
-		return null;
+        if(required){
+            throw new Error(`Failed to find ${fileName} in directory ${e}`);
+        }
 	}
 
 	return null;
 }
 
-    export async function fromDirectory(Template, path, options = {offline:false}) {
-
+export async function fromDirectory(Template, path, options = {offline:false}) {
+    try{
         // grab the README.md
         const readmeContents = await loadFileContents(path, 'README.md');
 
@@ -166,10 +192,14 @@ async function loadFileContents(path, fileName, json=false, required=false) {
             });
         }
 
-        registerFormulas(template.parserManager,template.getLogicManager());
+        templateLoader.registerFormulas(template.parserManager,template.getLogicManager());
 
         // check the template
         authorSignature ? template.validate({verifySignature: true}) : template.validate();
 
         return template;
     }
+    catch(e){
+        throw e;
+    }
+}
