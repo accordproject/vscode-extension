@@ -2,9 +2,9 @@
 	"compilerOptions": {
 		"module": "commonjs",
 		"target": "es6",
-		"outDir": "out",
+		"outDir": "out/desktop",
 		"lib": [
-			"es6"
+			"es6","WebWorker"
 		],
 		"noImplicitAny": false,
 		"sourceMap": true,

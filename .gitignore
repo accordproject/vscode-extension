@@ -6,3 +6,4 @@ client/dist
 server/dist
 .DS_Store
 *.vsix
+.vscode-test-web
