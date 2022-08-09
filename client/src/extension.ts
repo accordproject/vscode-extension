@@ -21,18 +21,22 @@ import {
 	LanguageClientOptions,
 	ServerOptions,
 	TransportKind
-} from 'vscode-languageclient';
+} from 'vscode-languageclient/node';
+
+import {
+	triggerClause,
+	verifyTemplateSignature,
+	setOutputChannelForDesktopCommands,
+} from './commandHandlers';
 
 import {
 	exportArchive,
 	downloadModels,
 	exportClassDiagram,
-	triggerClause,
 	getPreviewWebviewContent,
-	setOutputChannel,
 	parseClause,
-	verifyTemplateSignature
-} from './commandHandlers';
+	setOutputChannelForCommonCommands,
+} from './webCommandHandlers';
 
 let client: LanguageClient;
 
@@ -102,8 +106,10 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// create the output channel
 	const outputChannel = vscode.window.createOutputChannel('Cicero');
-	setOutputChannel(outputChannel);
 
+	//output channels of both web comands and desktop specific commands are same
+	setOutputChannelForCommonCommands(outputChannel);
+	setOutputChannelForDesktopCommands(outputChannel);
 	// Register commands
 	context.subscriptions.push(vscode.commands
 		.registerCommand('cicero-vscode-extension.exportArchive', exportArchive));
