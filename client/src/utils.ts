@@ -5,7 +5,7 @@ const languageTagRegex = require('ietf-language-tag-regex');
 
 const vscode = require('vscode')
 import { FileType } from 'vscode';
-import { URI } from 'vscode-uri';
+import { URI, Utils } from 'vscode-uri';
 const templateLoader = require('@accordproject/cicero-core').TemplateLoader;
 
 // Matches 'sample.md' or 'sample_TAG.md' where TAG is an IETF language tag (BCP 47)
@@ -23,17 +23,17 @@ const SAMPLE_FILE_REGEXP = xregexp('text[/\\\\]sample(_(' + IETF_REGEXP + '))?.m
 */
 async function loadFilesContents(path, regex) {
 
-	const subdirs = await vscode.workspace.fs.readDirectory(URI.parse(path));
+	const subdirs = await vscode.workspace.fs.readDirectory(path);
 
 	const result = await Promise.all(subdirs.map(async (subdir) => {
         // subdir an array where subdir[0] is string representing path to file/directory within 
         // and subdir[1] represents whether the path leads to a folder or a file
-	    const res = fsPath.resolve(path, subdir[0]);
+	    const res = Utils.resolvePath(path, subdir[0]);
 
         // if the subdir is a directory then we call this function recursively on that directory
         // else we return the file contents of the file as result
 		if(subdir[1]==FileType.Directory){
-			if( /.*node_modules$/.test(res) === false) {
+			if( /.*node_modules$/.test(res.fsPath) === false) {
 				return loadFilesContents(res, regex);
 			}
 			else {
@@ -43,8 +43,8 @@ async function loadFilesContents(path, regex) {
 		else {
 			if(regex.test(res)) {
 				return {
-					name: res,
-					contents: await loadFileContents(path, res, false, true)
+					name: res.fsPath,
+					contents: await loadFileContents(path, res.fsPath, false, true)
 				};
 			}
 			else {
@@ -66,10 +66,10 @@ async function loadFilesContents(path, regex) {
      * it does not exist and required is false
 */
 async function loadFileBuffer(path, fileName, required=false) {
-	const filePath = fsPath.resolve(path, fileName);
+	const filePath = Utils.resolvePath(path, fileName);
 
 	try{
-		return await vscode.workspace.fs.readFile(URI.file(filePath));
+		return await vscode.workspace.fs.readFile(filePath);
 	}
 	catch(e) {
         if(required){
@@ -90,10 +90,10 @@ async function loadFileBuffer(path, fileName, required=false) {
      * required is false
 */
 async function loadFileContents(path, fileName, json=false, required=false) {
-	const filePath = fsPath.resolve(path, fileName);
+	const filePath = Utils.resolvePath(path, fileName);
 
 	try {
-		const contents = Buffer.from(await vscode.workspace.fs.readFile(URI.file(filePath))).toString();
+		const contents = Buffer.from(await vscode.workspace.fs.readFile(filePath)).toString();
 		if(json && contents) {
 			return JSON.parse(contents);
 		}
@@ -156,7 +156,7 @@ export async function fromDirectory(Template, path, options = {offline:false}) {
         const externalModelFiles = await template.getModelManager().addAPModelFiles(modelFiles, modelFileNames, options && options.offline);
         if(!options || !options.offline){
             externalModelFiles.forEach(function (file) {
-                vscode.workspace.fs.writeFile(URI.file(path + '/model/' + file.name), file.content);
+                vscode.workspace.fs.writeFile(Utils.resolvePath(path, '/model/', file.name), file.content);
             });
         }
 
@@ -176,7 +176,7 @@ export async function fromDirectory(Template, path, options = {offline:false}) {
         if(template.getMetadata().getRuntime() === 'ergo') {
             const ergoFiles = await loadFilesContents(path, /logic[/\\].*\.ergo$/);
             ergoFiles.forEach((file) => {
-                const resolvedPath = slash(fsPath.resolve(path));
+                const resolvedPath = slash(fsPath.resolve(path.fsPath));
                 const resolvedFilePath = slash(fsPath.resolve(file.name));
                 const truncatedPath = resolvedFilePath.replace(resolvedPath+'/', '');
                 template.getLogicManager().addLogicFile(file.contents, truncatedPath);
@@ -185,7 +185,7 @@ export async function fromDirectory(Template, path, options = {offline:false}) {
             // load and add compiled JS files - we assume all runtimes are JS based (review!)
             const jsFiles = await loadFilesContents(path, /logic[/\\].*\.js$/);
             jsFiles.forEach((file) => {
-                const resolvedPath = slash(fsPath.resolve(path));
+                const resolvedPath = slash(fsPath.resolve(path.fsPath));
                 const resolvedFilePath = slash(fsPath.resolve(file.name));
                 const truncatedPath = resolvedFilePath.replace(resolvedPath+'/', '');
                 template.getLogicManager().addLogicFile(file.contents, truncatedPath);
