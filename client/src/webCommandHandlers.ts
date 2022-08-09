@@ -105,7 +105,7 @@ async function getModelManager(ctoFile: vscode.Uri) {
 
 export async function downloadModels(file: vscode.Uri) {
 	try {
-		const outputPath = Utils.resolvePath(file,'..');
+		const outputPath = Utils.dirname(file);
 		const modelManager = await getModelManager(file)
 
 		if( modelManager ) {
@@ -118,7 +118,7 @@ export async function downloadModels(file: vscode.Uri) {
 				}
 				// Always assume file names have been normalized from `\` to `/`
 				const modelFilename = (modelFile.fileName).split('/').pop();
-				const modelFileUri = outputPath.with({ path: path.join(outputPath.path, modelFilename) });
+				const modelFileUri = Utils.resolvePath(outputPath, modelFilename);
 				await vscode.workspace.fs.writeFile(modelFileUri, Buffer.from(modelFile.definitions, 'utf8'));
 			});
 		}
@@ -134,7 +134,7 @@ export async function downloadModels(file: vscode.Uri) {
 
 export async function exportClassDiagram(file: vscode.Uri) {
 	try {
-		const outputPath = path.dirname(file.path);
+		const outputPath = Utils.dirname(file);
 		const modelManager = await getModelManager(file);
 
 		if(modelManager) {
@@ -145,7 +145,7 @@ export async function exportClassDiagram(file: vscode.Uri) {
 			parameters.fileWriter = new FileWriter(outputPath);
 			modelManager.accept(visitor, parameters);
 	
-			vscode.window.showInformationMessage(`Exported class diagram to ${outputPath}`);
+			vscode.window.showInformationMessage(`Exported class diagram to ${outputPath.fsPath}`);
 			return true;	
 		}
 	} catch (error) {
@@ -327,14 +327,14 @@ export async function parseClause(file: vscode.Uri) {
 			}
 		);
 
-		panel.webview.html = await getParseWebviewContent(path.relative(templateDirectory.fsPath,file.path));
+		panel.webview.html = await getParseWebviewContent(path.relative(templateDirectory.fsPath,file.fsPath));
 
 		panel.webview.onDidReceiveMessage(
 			async (message) => {
 			  const {samplePath,outputPath,utcOffset,currentTime} = message;
-			  const template = await fromDirectory(Template,templateDirectory.fsPath);
+			  const template = await fromDirectory(Template,templateDirectory);
 		      const clause = new Clause(template);
-			  const sampleText = Buffer.from(await vscode.workspace.fs.readFile(URI.file(path.resolve(templateDirectory.fsPath,samplePath)))).toString();
+			  const sampleText = Buffer.from(await vscode.workspace.fs.readFile(Utils.resolvePath(templateDirectory,samplePath))).toString();
 
 		      clause.parse(sampleText, currentTime, utcOffset, path.resolve(templateDirectory.fsPath,samplePath));	  
 
@@ -345,7 +345,7 @@ export async function parseClause(file: vscode.Uri) {
 		      outputChannel.appendLine(JSON.stringify(clause.getData(),null,2));
 		      outputChannel.appendLine('');
 
-			  await vscode.workspace.fs.writeFile( URI.file(path.resolve(templateDirectory.fsPath,outputPath)), Buffer.from(JSON.stringify(clause.getData(),null,2),'utf-8'));
+			  await vscode.workspace.fs.writeFile( Utils.resolvePath(templateDirectory,outputPath), Buffer.from(JSON.stringify(clause.getData(),null,2),'utf-8'));
 			  outputChannel.appendLine(`Output written to ${outputPath}`);
 			  outputChannel.appendLine('');
 			},
@@ -361,10 +361,9 @@ export async function parseClause(file: vscode.Uri) {
 }
 
 async function checkTemplate(file: vscode.Uri) {
-	const packageJsonPath = path.join(file.fsPath, 'package.json');
+	const packageJsonPath = Utils.resolvePath(file, 'package.json');
 	// vscode.window.showInformationMessage(`Loading template from ${packageJsonPath}`);
-
-	const packageJsonContents = Buffer.from(await vscode.workspace.fs.readFile(URI.file(packageJsonPath)));
+	const packageJsonContents = Buffer.from(await vscode.workspace.fs.readFile(packageJsonPath));
 
 	if(!packageJsonContents) {
 		vscode.window.showErrorMessage('Template package.json file was not found.');
@@ -393,13 +392,13 @@ export async function exportArchive(file: vscode.Uri) {
 		}
 
 		await vscode.workspace.saveAll();
-		const template = await fromDirectory(Template,file.fsPath);;
+		const template = await fromDirectory(Template,file);;
 		const archive = await template.toArchive('ergo');
 
-		const outputPath = path.join(file.path, `${template.getIdentifier()}.cta`);
+		const outputPath = Utils.resolvePath(file, `${template.getIdentifier()}.cta`);
 		
-		await vscode.workspace.fs.writeFile( URI.file(outputPath), Buffer.from(archive));
-		vscode.window.showInformationMessage(`Created archive ${outputPath}`);
+		await vscode.workspace.fs.writeFile( outputPath, Buffer.from(archive));
+		vscode.window.showInformationMessage(`Created archive ${outputPath.fsPath}`);
 		return true;
 	} catch (error) {
 		vscode.window.showErrorMessage( `Failed to export archive ${error}`);

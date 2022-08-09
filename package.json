@@ -221,7 +221,7 @@
 		"compile": "tsc -b",
 		"watch": "tsc -b -w",
 		"web-compile": "webpack",
-		"web-watch": "webpack --watch",
+		"watch-web": "webpack --watch",
 		"lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
 		"postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
 		"test": "sh ./scripts/e2e.sh",

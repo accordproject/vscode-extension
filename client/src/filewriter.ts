@@ -14,7 +14,7 @@
 
 'use strict';
 
-import { URI } from 'vscode-uri';
+import { URI, Utils } from 'vscode-uri';
 
 const vscode = require('vscode');
 const path = require('path');
@@ -105,12 +105,12 @@ export default class FileWriter extends Writer {
 
         let filePath = this.outputDirectory;
         if (this.relativeDir) {
-            filePath = path.resolve(filePath, this.relativeDir);
+            filePath = Utils.resolvePath(filePath, this.relativeDir);
         }
-        filePath = path.resolve(filePath, this.fileName);
+        filePath = Utils.resolvePath(filePath, this.fileName);
 
         //console.log('Writing to ' + filePath );
-        vscode.workspace.fs.writeFile(URI.file(filePath), Buffer.from(this.getBuffer(),'utf-8'));
+        vscode.workspace.fs.writeFile(filePath, Buffer.from(this.getBuffer(),'utf-8'));
 
         this.fileName = null;
         this.relativeDir = null;
