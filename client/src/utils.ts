@@ -33,7 +33,7 @@ async function loadFilesContents(path, regex) {
         // if the subdir is a directory then we call this function recursively on that directory
         // else we return the file contents of the file as result
 		if(subdir[1]==FileType.Directory){
-			if( /.*node_modules$/.test(res.fsPath) === false) {
+			if( /.*node_modules$/.test(res.path) === false) {
 				return loadFilesContents(res, regex);
 			}
 			else {
@@ -43,8 +43,8 @@ async function loadFilesContents(path, regex) {
 		else {
 			if(regex.test(res)) {
 				return {
-					name: res.fsPath,
-					contents: await loadFileContents(path, res.fsPath, false, true)
+					name: res.path,
+					contents: await loadFileContents(path, res.path, false, true)
 				};
 			}
 			else {
@@ -176,7 +176,7 @@ export async function fromDirectory(Template, path, options = {offline:false}) {
         if(template.getMetadata().getRuntime() === 'ergo') {
             const ergoFiles = await loadFilesContents(path, /logic[/\\].*\.ergo$/);
             ergoFiles.forEach((file) => {
-                const resolvedPath = slash(fsPath.resolve(path.fsPath));
+                const resolvedPath = slash(fsPath.resolve(path.path));
                 const resolvedFilePath = slash(fsPath.resolve(file.name));
                 const truncatedPath = resolvedFilePath.replace(resolvedPath+'/', '');
                 template.getLogicManager().addLogicFile(file.contents, truncatedPath);
@@ -185,7 +185,7 @@ export async function fromDirectory(Template, path, options = {offline:false}) {
             // load and add compiled JS files - we assume all runtimes are JS based (review!)
             const jsFiles = await loadFilesContents(path, /logic[/\\].*\.js$/);
             jsFiles.forEach((file) => {
-                const resolvedPath = slash(fsPath.resolve(path.fsPath));
+                const resolvedPath = slash(fsPath.resolve(path.path));
                 const resolvedFilePath = slash(fsPath.resolve(file.name));
                 const truncatedPath = resolvedFilePath.replace(resolvedPath+'/', '');
                 template.getLogicManager().addLogicFile(file.contents, truncatedPath);
