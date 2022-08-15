@@ -43,10 +43,10 @@ export function setOutputChannelForCommonCommands(oc: vscode.OutputChannel) {
 async function getModelManager(ctoFile: vscode.Uri) {
 	try {
 
-		const modelRoot = path.dirname(ctoFile.fsPath)
+		const modelRoot = Utils.dirname(ctoFile);
 
 		
-		const modelFileName = ctoFile.fsPath;
+		const modelFileName = ctoFile.path;
 
 		const logicManager = new LogicManager('es6');
 		const modelManager = logicManager.getModelManager();
@@ -64,9 +64,7 @@ async function getModelManager(ctoFile: vscode.Uri) {
 		// then we also load all the files in the directory, otherwise we assume
 		// that the model file is standalone and only has internet dependencies
 		// i.e. models.accordproject.org
-		if (path.basename(modelRoot) === 'model') {
-			path.dirname(ctoFile.fsPath)
-
+		if (Utils.basename(modelRoot) === 'model') {
 			// Find all cto under the directory that contains the cto file
 			const modelFiles = await vscode.workspace.findFiles(new vscode.RelativePattern(modelRoot, '*.cto'));
 
@@ -123,7 +121,7 @@ export async function downloadModels(file: vscode.Uri) {
 			});
 		}
 		await vscode.commands.executeCommand(`workbench.files.action.refreshFilesExplorer`);
-		vscode.window.showInformationMessage(`Downloaded models to ${outputPath.fsPath}`);	
+		vscode.window.showInformationMessage(`Downloaded models to ${outputPath.path}`);	
 		return true;
 	} catch (error) {
 		vscode.window.showErrorMessage( `Failed to download models ${error}`);
@@ -145,7 +143,7 @@ export async function exportClassDiagram(file: vscode.Uri) {
 			parameters.fileWriter = new FileWriter(outputPath);
 			modelManager.accept(visitor, parameters);
 	
-			vscode.window.showInformationMessage(`Exported class diagram to ${outputPath.fsPath}`);
+			vscode.window.showInformationMessage(`Exported class diagram to ${outputPath.path}`);
 			return true;	
 		}
 	} catch (error) {
@@ -327,7 +325,7 @@ export async function parseClause(file: vscode.Uri) {
 			}
 		);
 
-		panel.webview.html = await getParseWebviewContent(path.relative(templateDirectory.fsPath,file.fsPath));
+		panel.webview.html = await getParseWebviewContent(path.relative(templateDirectory.path,file.path));
 
 		panel.webview.onDidReceiveMessage(
 			async (message) => {
@@ -336,7 +334,7 @@ export async function parseClause(file: vscode.Uri) {
 		      const clause = new Clause(template);
 			  const sampleText = Buffer.from(await vscode.workspace.fs.readFile(Utils.resolvePath(templateDirectory,samplePath))).toString();
 
-		      clause.parse(sampleText, currentTime, utcOffset, path.resolve(templateDirectory.fsPath,samplePath));	  
+		      clause.parse(sampleText, currentTime, utcOffset, Utils.resolvePath(templateDirectory,samplePath).path);	  
 
 			  outputChannel.show();
 
@@ -363,7 +361,7 @@ export async function parseClause(file: vscode.Uri) {
 async function checkTemplate(file: vscode.Uri) {
 	const packageJsonPath = Utils.resolvePath(file, 'package.json');
 	// vscode.window.showInformationMessage(`Loading template from ${packageJsonPath}`);
-	const packageJsonContents = Buffer.from(await vscode.workspace.fs.readFile(packageJsonPath));
+	const packageJsonContents = Buffer.from(await vscode.workspace.fs.readFile(packageJsonPath)).toString();
 
 	if(!packageJsonContents) {
 		vscode.window.showErrorMessage('Template package.json file was not found.');
@@ -398,7 +396,7 @@ export async function exportArchive(file: vscode.Uri) {
 		const outputPath = Utils.resolvePath(file, `${template.getIdentifier()}.cta`);
 		
 		await vscode.workspace.fs.writeFile( outputPath, Buffer.from(archive));
-		vscode.window.showInformationMessage(`Created archive ${outputPath.fsPath}`);
+		vscode.window.showInformationMessage(`Created archive ${outputPath.path}`);
 		return true;
 	} catch (error) {
 		vscode.window.showErrorMessage( `Failed to export archive ${error}`);
