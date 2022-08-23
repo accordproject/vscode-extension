@@ -69,7 +69,8 @@ async function loadFileBuffer(path, fileName, required=false) {
 	const filePath = Utils.resolvePath(path, fileName);
 
 	try{
-		return await vscode.workspace.fs.readFile(filePath);
+        const contents = Buffer.from(await vscode.workspace.fs.readFile(filePath));
+		return contents;
 	}
 	catch(e) {
         if(required){
@@ -117,8 +118,7 @@ export async function fromDirectory(Template, path, options = {offline:false}) {
         const readmeContents = await loadFileContents(path, 'README.md');
 
         // grab the logo.png
-        const logo = Buffer.from(await loadFileBuffer(path, 'logo.png'));
-
+        const logo = await loadFileBuffer(path, 'logo.png');
         // grab the request.json
         const requestJsonObject = await loadFileContents(path, 'request.json', true );
 

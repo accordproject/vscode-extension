@@ -37,7 +37,9 @@
 		"onCommand:cicero-vscode-extension.viewClassDiagram",
 		"onCommand:cicero-vscode-extension.triggerClause",
 		"onCommand:cicero-vscode-extension.parseClause",
-		"onCommand:cicero-vscode-extension.showPreview"
+		"onCommand:cicero-vscode-extension.showPreview",
+		"onCommand:cicero-vscode-extension.compileToTarget",
+		"onCommand:cicero-vscode-extension.draftClause"
 	],
 	"contributes": {
 		"languages": [
@@ -133,6 +135,16 @@
 				"category": "Accord Project"
 			},
 			{
+				"command": "cicero-vscode-extension.compileToTarget",
+				"title": "Compile Model To Target",
+				"category": "Accord Project"
+			},
+			{
+				"command": "cicero-vscode-extension.draftClause",
+				"title": "Draft Clause",
+				"category": "Accord Project"
+			},
+			{
 				"command": "cicero-vscode-extension.showPreview",
 				"title": "Open Preview",
 				"icon": {
@@ -178,6 +190,16 @@
 					"when": "resourceLangId == ciceroMark || resourceLangId == concerto",
 					"command": "cicero-vscode-extension.showPreview",
 					"group": "AccordProject@7"
+				},
+				{
+					"when": "resourceLangId == concerto",
+					"command": "cicero-vscode-extension.compileToTarget",
+					"group": "AccordProject@8"
+				},
+				{
+					"when": "resourceLangId == json",
+					"command": "cicero-vscode-extension.draftClause",
+					"group": "AccordProject@9"
 				}
 			],
 			"editor/title": [
@@ -211,6 +233,14 @@
 				{
 					"command": "cicero-vscode-extension.parseClause",
 					"when": "false"
+				},
+				{
+					"command": "cicero-vscode-extension.compileToTarget",
+					"when": "false"
+				},
+				{
+					"command": "cicero-vscode-extension.draftClause",
+					"when": "false"
 				}
 			]
 		}
@@ -232,6 +262,7 @@
 		"@babel/core": "7.17.5",
 		"@babel/plugin-proposal-class-properties": "^7.18.6",
 		"@babel/plugin-proposal-object-rest-spread": "^7.18.9",
+		"@babel/plugin-transform-runtime": "^7.18.10",
 		"@babel/plugin-transform-typescript": "^7.18.8",
 		"@babel/preset-env": "^7.18.9",
 		"@babel/preset-typescript": "^7.18.6",
@@ -256,6 +287,7 @@
 		"webpack-cli": "^4.10.0"
 	},
 	"dependencies": {
+		"@babel/runtime": "^7.18.9",
 		"ietf-language-tag-regex": "^0.0.5",
 		"slash": "^4.0.0",
 		"vscode-uri": "^3.0.3",

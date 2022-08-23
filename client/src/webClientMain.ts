@@ -24,7 +24,9 @@ import {
 	downloadModels,
 	exportClassDiagram,
 	parseClause,
-	exportArchive
+	exportArchive,
+	compileToTarget,
+	draftClause
 } from './webCommandHandlers';
 
 async function onDocumentChange(event) {
@@ -55,6 +57,10 @@ export async function activate(context: vscode.ExtensionContext) {
 		.registerCommand('cicero-vscode-extension.downloadModels', downloadModels));
 	context.subscriptions.push(vscode.commands
 		.registerCommand('cicero-vscode-extension.exportClassDiagram', exportClassDiagram));
+	context.subscriptions.push(vscode.commands
+		.registerCommand('cicero-vscode-extension.compileToTarget', compileToTarget));
+	context.subscriptions.push(vscode.commands
+		.registerCommand('cicero-vscode-extension.draftClause', draftClause));
 
 	let currentPanel: vscode.WebviewPanel | undefined = undefined;
 
