@@ -33,10 +33,29 @@ Please visit the [Visual Studio Code Marketplace](https://marketplace.visualstud
 
 ### Commands
 
+- Compile your ``model.cto `` file to a target
+
+![Code Gen GIF](./assets/Code%20Gen.gif)
+
+
+- Draft clause after passing relevent input into the form. 
+
+![Draft Clause GIF](./assets/Draft%20Clause.gif)
+
+
 - Work offline by downloading Concerto model dependencies (context-click on a `*.cto` file)
-- Package templates into Cicero Template Archive (cta) files (context-click on root folder)
 - Export PlantUML class diagram (context-click on a `*.cto` file)
+
+![Downdload Models and Export Class Diagrsms GIF](./assets/Downloads%20Models%20and%20Export%20Class%20Diagrsm.gif)
+
+- Parse Clause after entering relevent information into the input form. 
+- Export the template directory as a ``.cta`` archive.
+ 
+ ![Parse Clause and Export as archive GIF](./assets/Parse%20Clause%20And%20Export%20As%20Archive.gif)
+
 - Trigger a template, parsing data from sample.md and passing in `request.json` and `state.json` (context-click on root folder)
+
+![Trigger Clause GIF](./assets/Trigger%20Clause.gif)
 
 ### Views
 - HTML preview for template text (open `grammar.tem.md` and then press the _Open Preview_ icon in the editor or context menu)
