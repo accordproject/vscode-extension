@@ -11,10 +11,10 @@
 		"url": "https://github.com/accordproject/cicero-vscode-extension"
 	},
 	"dependencies": {
-		"@accordproject/cicero-core": "^0.22.0",
+		"@accordproject/cicero-core": "^0.23.0",
 		"@accordproject/concerto-core": "^1.0.0",
 		"@accordproject/ergo-compiler": "^0.22.0",
-		"@accordproject/ergo-engine": "^0.22.0",
+		"@accordproject/ergo-engine": "^0.23.1",
 		"@accordproject/markdown-template": "^0.13.0",
 		"fast-safe-stringify": "2.0.6",
 		"glob": "^7.1.6",
