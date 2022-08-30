@@ -1,7 +1,3 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
 
 //@ts-check
 'use strict';
@@ -90,79 +86,5 @@ const browerClientConfig = {
 		level: "log", // enables logging required for problem matchers
 	},
 };
-
-/** @type WebpackConfig */
-/** 
-const browerServerConfig = {
-	mode:"none",
-	target:"webworker", 
-	entry: {
-		'server': './server/src/browserServerMain.ts'
-	},
-	output: {
-		filename: "[name].js",
-		path: path.join(__dirname,'server','out','web'),
-		libraryTarget: 'var',
-		library: 'serverExportVar'
-	},
-	resolve: {
-		mainFields: ['browser','module', 'main'],
-		extensions: ['.ts','.js'], // support ts-files and js-files
-		alias: {},
-		fallback: {
-			//'child_process':false,
-			'path': require.resolve("path-browserify"),
-			'http': require.resolve('stream-http'),
-			'crypto': require.resolve('crypto-browserify'),
-			'buffer': require.resolve('buffer/'),
-			'https': require.resolve('https-browserify'),
-			'url':require.resolve('url/'),
-			'stream':require.resolve('stream-browserify'),
-			// Webpack 5 no longer polyfills Node.js core modules automatically.
-			// see https://webpack.js.org/configuration/resolve/#resolvefallback
-			// for the list of Node.js core module polyfills.
-			'assert': require.resolve('assert'),
-			'fs':false,
-			'zlib':require.resolve('browserify-zlib'),
-			'os': require.resolve('os-browserify/browser'),
-			'net':false,
-			'tls':false,
-			'constants':false,
-			'tty':false
-		},
-	},
-	module: {
-		rules: [
-			{
-				test: /\.ts$/,
-				exclude: /node_modules/,
-				use: [
-					{
-						loader: 'ts-loader',
-					},
-				],
-			},
-		],
-	},
-	externals: {
-		vscode: 'commonjs vscode', // ignored because it doesn't exist
-	},
-	performance: {
-		hints: false,
-	},
-	devtool: 'source-map',
-	plugins: [
-		new webpack.ProvidePlugin({
-		   Buffer: ['buffer', 'Buffer'],
-	   }),
-	   new webpack.ProvidePlugin({
-		   process: 'process/browser', // provide a shim for the global `process` variable
-	   }),
-	   new NodePolyfillPlugin(),
-
-   ],
-
-}
-*/
 
 module.exports =  [ browerClientConfig ];

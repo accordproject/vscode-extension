@@ -101,6 +101,112 @@ async function getModelManager(ctoFile: vscode.Uri) {
 	return null;
 }
 
+export async function draftClause(file: vscode.Uri) {
+	try {	
+		const templateDirectory = Utils.resolvePath(file,"..");
+		await vscode.workspace.saveAll();
+
+		var panel = vscode.window.createWebviewPanel(
+			'draftInput',
+			'Draft Input',
+			vscode.ViewColumn.Beside,
+			{
+			  // Enable scripts in the webview
+			  enableScripts: true
+			}
+		);
+
+		panel.webview.html = await getDraftWebviewContent(path.relative(templateDirectory.path,file.path));
+
+		panel.webview.onDidReceiveMessage(
+			async (message) => {
+			  const {dataPath,outputPath,utcOffset,currentTime} = message;
+			  outputChannel.show();
+			  const template = await fromDirectory(Template,templateDirectory);
+		      const clause = new Clause(template);
+
+			  const clauseData = JSON.parse(Buffer.from(await vscode.workspace.fs.readFile(Utils.resolvePath(templateDirectory,dataPath.slice(1)))).toString());
+			  clause.setData(clauseData);
+
+		      const drafted = clause.draft(null, currentTime, utcOffset);	  
+
+			  outputChannel.show();
+
+			  outputChannel.appendLine(`${dataPath} parse result`);
+		      outputChannel.appendLine('======================');
+		      outputChannel.appendLine(drafted);
+		      outputChannel.appendLine('');
+
+			  await vscode.workspace.fs.writeFile( Utils.resolvePath(templateDirectory,outputPath), Buffer.from(drafted,'utf-8'));
+			  outputChannel.appendLine(`Output written to ${outputPath}`);
+			  outputChannel.appendLine('');
+			},
+			null
+	    )
+		
+		return true;
+	} catch (error) {
+		vscode.window.showErrorMessage( `Failed to draft clause ${error}`);
+	}
+
+	return false;
+}
+
+export async function compileToTarget(file: vscode.Uri) {
+	try{
+		const modelManager = await getModelManager(file);
+
+		const targets = await vscode.window.showQuickPick(['Go', 'PlantUML', 'JSONSchema', 'Typescript', 'Java', 'XMLSchema', 'GraphQL', 'CSharp'],{canPickMany:true})
+		
+		for(const target of targets){
+			let visitor = null;
+			const outputPath = Utils.resolvePath(Utils.dirname(file),target);
+
+        	switch(target) {
+        	case 'Go':
+        	    visitor = new CodeGen.GoLangVisitor();
+        	    break;
+        	case 'PlantUML':
+        	    visitor = new CodeGen.PlantUMLVisitor();
+        	    break;
+        	case 'Typescript':
+        	    visitor = new CodeGen.TypescriptVisitor();
+        	    break;
+        	case 'Java':
+        	    visitor = new CodeGen.JavaVisitor();
+        	    break;
+        	case 'JSONSchema':
+        	    visitor = new CodeGen.JSONSchemaVisitor();
+        		break;
+        	case 'XMLSchema':
+        	    visitor = new CodeGen.XmlSchemaVisitor();
+        	    break;
+        	case 'GraphQL':
+       		    visitor = new CodeGen.GraphQLVisitor();
+        	    break;
+        	case 'CSharp':
+        	    visitor = new CodeGen.CSharpVisitor();
+       		    break;
+        	case 'OData':
+        	    visitor = new CodeGen.ODataVisitor();
+        	    break;
+        	}
+
+        	if(visitor) {
+        	    let parameters = {} as any;
+        	    parameters.fileWriter = new FileWriter(outputPath);
+       	    	modelManager.accept(visitor, parameters);
+        	    vscode.window.showInformationMessage(`Compiled to ${target} in '${outputPath.path}'.`);
+        	} else {
+        	    vscode.window.showErrorMessage('Unrecognized target: ' + target);
+        	}
+		}
+	
+	}catch(e) {
+				vscode.window.showErrorMessage("Compilation error: "+e);
+	}
+}
+
 export async function downloadModels(file: vscode.Uri) {
 	try {
 		const outputPath = Utils.dirname(file);
@@ -154,7 +260,7 @@ export async function exportClassDiagram(file: vscode.Uri) {
 }
 
 
-function getParseWebviewHtml(defaultSamplePath,defaultOutPath){
+function getDraftWebviewHtml(defaultSamplePath,defaultOutPath, defaultDataPath){
 
 	return `
 	<div class="container">
@@ -163,10 +269,10 @@ function getParseWebviewHtml(defaultSamplePath,defaultOutPath){
     </div>
 	  <div class="row">
 		<div class="col-25">
-		  <label for="samplePath">Sample Path</label>
+		  <label for="datapath">Data Path</label>
 		</div>
 		<div class="col-75">
-		  <input type="text" id="samplePath" name="samplePath" placeholder="Choose Sample Path" value=${defaultSamplePath} >
+		  <input type="text" id="dataPath" name="dataPath" placeholder="Choose Data Path" value=${defaultDataPath}>
 		</div>
 	  </div>
 	  <br>
@@ -193,25 +299,57 @@ function getParseWebviewHtml(defaultSamplePath,defaultOutPath){
 		  <label for="currentTime">Current Time</label>
 		</div>
 		<div class="col-75">
-		  <input type="text" id="currentTime" name="currentTime" placeholder="Current Time">
+		  <input type="text" id="currentTime" name="currentTime" placeholder="Current Time" value="0">
 		</div>
 	  </div>	  
 	  <br>
 	  <r>
 	  <br>
 	  <div class="row">
-	  <button type="submit" id="button" class="button">Parse</button>
+	  <button type="submit" id="button" class="button">Draft</button>
 	  </div>
 	</div>`
 
 }
 
-function getParseWebviewContent(samplePath){
+function getDraftWebviewContent(samplePath){
     
-    const defaultOutPath = samplePath+".json";
-	const html = getParseWebviewHtml(samplePath,defaultOutPath);
+    const defaultOutPath = samplePath+".md";
+	const defaultDataPath = path.resolve(samplePath,"..","data.json")
+	const html = getDraftWebviewHtml(samplePath,defaultOutPath,defaultDataPath);
 
-	const styles = `<style>
+	const styles = getCommonStyles();
+
+	return `<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Accord Project</title>
+		<style>${styles}</style>
+	</head>
+	<body>
+       ${html}
+	</body>
+	<script>
+		let btn = document.getElementById("button");
+		const vscode = acquireVsCodeApi();
+        btn.addEventListener('click', event => {
+			vscode.postMessage({
+				command: 'draft',
+				outputPath: document.getElementById("outputPath").value,
+				dataPath: document.getElementById("dataPath").value,
+				utcOffset: document.getElementById("utcOffset").value,
+				currentTime: document.getElementById("currentTime").value,
+			});
+        });
+
+    </script>
+	</html>`;
+}
+
+function getCommonStyles(){
+	return `<style>
 	* {
 	  box-sizing: border-box;
 	}
@@ -281,6 +419,66 @@ function getParseWebviewContent(samplePath){
 	  }
 	}
 	</style>`
+}
+
+function getParseWebviewHtml(defaultSamplePath,defaultOutPath){
+
+	return `
+	<div class="container">
+	<div class="row">
+	<h4>*Paths mentioned here are relative to the template directory</h4>
+    </div>
+	  <div class="row">
+		<div class="col-25">
+		  <label for="samplePath">Sample Path</label>
+		</div>
+		<div class="col-75">
+		  <input type="text" id="samplePath" name="samplePath" placeholder="Choose Sample Path" value=${defaultSamplePath} >
+		</div>
+	  </div>
+	  <br>
+	  <div class="row">
+		<div class="col-25">
+		  <label for="outputPath">Ouput Path</label>
+		</div>
+		<div class="col-75">
+		  <input type="text" id="outputPath" name="outputPath" placeholder="Choose Output Path" value=${defaultOutPath}>
+		</div>
+	  </div>
+	  <br>
+	  <div class="row">
+		<div class="col-25">
+		  <label for="utcOffset">UTC Offset</label>
+		</div>
+		<div class="col-75">
+		  <input type="number" id="utcOffset" name="utcOffset" placeholder="UTC Offset" value="0">
+		</div>
+	  </div>
+	  <br>
+	  <div class="row">
+		<div class="col-25">
+		  <label for="currentTime">Current Time</label>
+		</div>
+		<div class="col-75">
+		  <input type="text" id="currentTime" name="currentTime" placeholder="Current Time">
+		</div>
+	  </div>	  
+	  <br>
+	  <r>
+	  <br>
+	  <div class="row">
+	  <button type="submit" id="button" class="button">Parse</button>
+	  </div>
+	</div>`
+
+}
+
+function getParseWebviewContent(samplePath){
+    
+    const defaultOutPath = samplePath+".json";
+	const html = getParseWebviewHtml(samplePath,defaultOutPath);
+
+	const styles = getCommonStyles();
 
 	return `<!DOCTYPE html>
 	<html lang="en">
@@ -613,6 +811,8 @@ export async function getPreviewWebviewContent() {
 	  <style>${styles}</style>
   </head>
   <body>
+  <br>
+  <br>
 ${html}
   </body>
   </html>`;

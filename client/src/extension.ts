@@ -36,6 +36,8 @@ import {
 	getPreviewWebviewContent,
 	parseClause,
 	setOutputChannelForCommonCommands,
+	draftClause,
+	compileToTarget,
 } from './webCommandHandlers';
 
 let client: LanguageClient;
@@ -123,7 +125,11 @@ export function activate(context: vscode.ExtensionContext) {
 		.registerCommand('cicero-vscode-extension.parseClause', parseClause));
 	context.subscriptions.push(vscode.commands
 		.registerCommand('cicero-vscode-extension.verifyTemplateSignature', verifyTemplateSignature));
-
+	context.subscriptions.push(vscode.commands
+		.registerCommand('cicero-vscode-extension.draftClause', draftClause));
+	context.subscriptions.push(vscode.commands
+		.registerCommand('cicero-vscode-extension.compileToTarget', compileToTarget));
+	
 	let currentPanel: vscode.WebviewPanel | undefined = undefined;
 
 	context.subscriptions.push(
