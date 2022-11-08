@@ -19,8 +19,8 @@
 		"vscode-test": "^1.3.0"
 	},
 	"dependencies": {
-		"@accordproject/cicero-core": "^0.22.0",
-		"@accordproject/cicero-engine": "^0.22.0",
+		"@accordproject/cicero-core": "^0.24.0",
+		"@accordproject/cicero-engine": "^0.24.0",
 		"@accordproject/concerto-core": "^1.2.1",
 		"@accordproject/concerto-tools": "^1.2.1",
 		"@accordproject/markdown-it-cicero": "^0.13.0",
